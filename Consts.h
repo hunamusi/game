@@ -5,15 +5,16 @@
 
 namespace Const
 {
-    // ===== ÉvÉåÉCÉÑÅ[ä÷òA =====
-    constexpr float PLAYER_SPEED = 4.0f;
+    // ===== „Éó„É¨„Ç§„É§„ÉºÈñ¢ÈÄ£ =====
+    constexpr float PLAYER_SPEED = 120.0f;
     constexpr float MAX_PROJECTILES = 8.0f;
    constexpr DxPlus::Vec2 PLAYER_CENTER_OFFSET = { 0.0f,-48.0f };
    constexpr float PROJECTILE_SPEED = 12.0f;
-    // ===== ìGä÷òA =====
+    // ===== ÊïµÈñ¢ÈÄ£ =====
     constexpr float ENEMY_SPEED = 4.0f;
     constexpr float MOVE_DISTANCE = 100.0f;
 
-    // ===== ÉQÅ[ÉÄì‡ã§í  =====
+    // ===== „Ç≤„Éº„É†ÂÜÖÂÖ±ÈÄö =====
 
 }
+
