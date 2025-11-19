@@ -1,4 +1,4 @@
-﻿// =============================
+// =============================
 // Core/GameContext.cpp
 // =============================
 #include "GameContext.h"
@@ -99,7 +99,10 @@ void GameContext::Draw() const
 {
     float camX = camera.GetX();
     float camY = camera.GetY();
-    backgroundSpr->Draw({});
+    backgroundSpr->Draw({ -camX, -camY });
+    for (int i = 0;++i <= 10;) {
+        DxPlus::Primitive2D::DrawRect({ 0+i*120 - camX,400- camY }, { 120,120 },GetColor(0+i*10,0+i*10,0+i*10));
+   }
     for(auto&e:entities)
     {
         e->CameraDraw(camX, camY);
