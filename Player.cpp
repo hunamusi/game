@@ -31,7 +31,7 @@ void Player::Update()
 {
     using namespace DxPlus::Input;
 
-    int button = GetButton(PLAYER1);
+    int button = GetButtonDown(PLAYER1);
     bool left = (button & BUTTON_LEFT) != 0;
     bool right = (button & BUTTON_RIGHT) != 0;
     bool up = (button & BUTTON_UP) != 0;
@@ -87,3 +87,4 @@ void Player::Update()
        GC().SpawnProjectile(position,dir);
     }
 }
+
