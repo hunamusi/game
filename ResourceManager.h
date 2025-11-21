@@ -5,13 +5,20 @@
 #include <string>
 #include <unordered_map>
 #include "DxPlus/DxPlus.h"
+enum TileType :int8_t {
+    Tile_None = -1,
+    Tile_Solid,
+    Tile_Platform,
+    Tile_Water,
 
+};
 struct Tileset
 {
     std::wstring key;
     int chipW = 0, chipH = 0, tileCountX = 0, tileCountY = 0;
     std::vector<int> handles;
     std::vector<uint8_t> flags;
+    std::vector<int8_t>types;
 };
 
 class ResourceManager
@@ -142,13 +149,17 @@ public:
     /// <returns>指定セルのスプライト（存在しない場合は nullptr）</returns>
     const DxPlus::Sprite::SpriteBase* GridAt(const std::wstring& key, int x = 0, int y = 0);
     void UnloadGrids();
+    Tileset* GetTileset(const std::wstring& key);
+    int GetTileHandle(const std::wstring& key, int tileID);
+    int8_t GetTileType(const std::wstring& key, int tileID);
 
 private:
 
     int LoadFont(const std::wstring& fontName, const std::wstring& path);
+    bool RegisterTileset(const std::wstring& key, const std::wstring& path, int chipW, int chipH);
     void UnloadFont(const std::wstring& fontName);
     void UnloadFonts();
- 
+    void UnregisterTileset(const std::wstring& key);
     ResourceManager() = default;
     ~ResourceManager() = default;
 
@@ -170,6 +181,8 @@ private:
 
     std::unordered_map<std::wstring, GridInfo> grids;
     std::unordered_map<std::wstring, FontInfo> fonts;
+    std::unordered_map<std::wstring, Tileset> tilesets;
+
 };
 /// <summary>
 /// ResourceManager のシングルトンインスタンスを取得するショートカット

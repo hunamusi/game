@@ -5,16 +5,18 @@
 
 namespace Const
 {
-    // ===== „Éó„É¨„Ç§„É§„ÉºÈñ¢ÈÄ£ =====
+    // ===== ÉvÉåÉCÉÑÅ[ä÷òA =====
     constexpr float PLAYER_SPEED = 120.0f;
     constexpr float MAX_PROJECTILES = 8.0f;
    constexpr DxPlus::Vec2 PLAYER_CENTER_OFFSET = { 0.0f,-48.0f };
    constexpr float PROJECTILE_SPEED = 12.0f;
-    // ===== ÊïµÈñ¢ÈÄ£ =====
+    // ===== ìGä÷òA =====
     constexpr float ENEMY_SPEED = 4.0f;
     constexpr float MOVE_DISTANCE = 100.0f;
 
-    // ===== „Ç≤„Éº„É†ÂÜÖÂÖ±ÈÄö =====
+    // ===== ÉQÅ[ÉÄì‡ã§í  =====
 
+    // =====TileMap Layer =====
+    constexpr int LAYER_BACKGROUND = 0;
+    constexpr int LAYER_TERRAIN = 1;
 }
-

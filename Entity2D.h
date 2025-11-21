@@ -17,7 +17,7 @@ public:
 	// 位置の取得／設定
 	const DxPlus::Vec2& GetPosition() const { return position; }
 	void SetPosition(const DxPlus::Vec2& p) { position = p; }
-
+	DxPlus::Vec2& Position() { return position; }
 	// ライフサイクル処理
     virtual void Init() {}
     virtual void Reset() {}
@@ -55,11 +55,14 @@ protected:
 	DxPlus::Vec2 centerOffset{ Const::PLAYER_CENTER_OFFSET };
 	GameContext* gc{ nullptr };
 	GameContext& GC()const noexcept { return*gc; }
+	bool isGrounded{ false };
 	bool alive = true;
 	float colliderRadius{ 32.0f };
 	int hp{ 3 };
 	int attack{ 1 };
 	int graphHandle;
+	DxPlus::Vec2 prevPosition;
+	
 
 
 };

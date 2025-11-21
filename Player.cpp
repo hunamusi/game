@@ -21,7 +21,7 @@ void Player::Init()
 
 void Player::Reset()
 {
-    position = { DxPlus::CLIENT_WIDTH * 0.5f, DxPlus::CLIENT_HEIGHT * 0.5f };
+    position = { DxPlus::CLIENT_WIDTH * 0.515f, DxPlus::CLIENT_HEIGHT * 0.515f };
     velocity = {};
 
     if (currentAnim) currentAnim->Reset();
@@ -29,6 +29,7 @@ void Player::Reset()
 
 void Player::Update()
 {
+    prevPos = position;
     using namespace DxPlus::Input;
 
     int button = GetButtonDown(PLAYER1);
@@ -40,14 +41,19 @@ void Player::Update()
     AnimationClip* nextAnim{ nullptr };
     bool isMoving{ false };
     float vx{}, vy{};
+    if (PlayerCount >= 0)
+    {
     if (left && !right)
     {
+        
         vx = -Const::PLAYER_SPEED;
         nextAnim = &animLeft;
         isMoving = true;
+       
     }
     else if (!left && right)
     {
+        
         vx = Const::PLAYER_SPEED;
         nextAnim = &animRight;
         isMoving = true;
@@ -64,7 +70,7 @@ void Player::Update()
         nextAnim = &animDown;
         isMoving = true;
     }
-
+    }
     velocity = { vx, vy };
     if (vx != 0 || vy != 0)
     {
@@ -87,4 +93,3 @@ void Player::Update()
        GC().SpawnProjectile(position,dir);
     }
 }
-

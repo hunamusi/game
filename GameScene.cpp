@@ -3,6 +3,7 @@
 // =============================
 #include "GameScene.h"
 #include "SceneManager.h"
+#include "DxPlus/DxPlus.h"
 
 void GameScene::Init()
 {
