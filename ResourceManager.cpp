@@ -16,7 +16,17 @@ void ResourceManager::LoadAll()
     LoadTextureAsSpriteLeftTop(ResourceKeys::Background, L"./Data/Images/back.png");
     LoadGridBottom(ResourceKeys::Player, L"./Data/Images/player.png", { 0,0 }, { 3,4 }, { 96,128 });
     LoadGridBottom(ResourceKeys::Enemy_Yankee, L"./Data/Images/yankee.png", { 0,0 }, { 3,4 }, { 96, 128 });
-    LoadTextureAsSpriteLeftTop(ResourceKeys::Player_Shot, L"./Data/Images/player_shot.png");
+    LoadTextureAsSpriteCenter(ResourceKeys::Player_Shot, L"./Data/Images/player_shot.png");
+    LoadGridCenter(ResourceKeys::Explosion, L"./Data/Images/explosion.png", { 0,0 }, { 10,3 }, { 256,256 });
+    LoadTextureAsSpriteBottom(ResourceKeys::Explosion, L"./Data/Images/sword.png");
+    LoadTextureAsSpriteBottom(ResourceKeys::Player_Sword, L"./Data/Images/sword.png");
+    LoadTextureAsSpriteCenter(ResourceKeys::Fire,L"./Data/Images/fire.png");
+    LoadTextureAsSpriteCenter(ResourceKeys::Enemy, L"./Data/Images/slime.png");
+
+    LoadMusic(ResourceKeys::BGM_Game,       L"./Data/Sounds/maou_bgm_8bit14.mp3");
+    LoadSound(ResourceKeys::SE_Explosion,   L"./Data/Sounds/Explosion.mp3");
+    LoadSound(ResourceKeys::SE_PlayerShot,  L"./Data/Sounds/PlayerShot.wav");
+
     LoadFont(ResourceKeys::Font_Title, L"./Data/Fonts/Bitcount/static/Bitcount-Light.ttf");
 }
 
@@ -47,6 +57,52 @@ void ResourceManager::UnloadGrids()
         }
     }
     grids.clear();
+}
+
+int ResourceManager::GetMusic(const std::wstring& key)
+{
+    auto it = musics.find(key);
+    return (it != musics.end()) ? it->second : -1;
+}
+
+int ResourceManager::GetSound(const std::wstring& key)
+{
+    auto it = sounds.find(key);
+    return (it != sounds.end()) ? it->second : -1;
+}
+
+int ResourceManager::LoadMusic(const std::wstring& key, const std::wstring& path)
+{
+    int music = DxLib::LoadSoundMem(path.c_str());
+    if (music == -1) DxPlus::Utils::FatalError((L"Failed to load music " + path).c_str());
+    musics[key] = music;
+    return music;
+}
+
+int ResourceManager::LoadSound(const std::wstring& key, const std::wstring& path)
+{
+    int sound = DxLib::LoadSoundMem(path.c_str());
+    if (sound == -1) DxPlus::Utils::FatalError((L"Failed to load music " + path).c_str());
+    sounds[key] = sound;
+    return sound;
+}
+
+void ResourceManager::UnloadMusics()
+{
+    for (auto& m : musics)
+    {
+        if (m.second >= 0) DxLib::DeleteSoundMem(m.second);
+    }
+    musics.clear();
+}
+
+void ResourceManager::UnloadSounds()
+{
+    for (auto& s : sounds)
+    {
+        if (s.second >= 0) DxLib::DeleteSoundMem(s.second);
+    }
+    sounds.clear();
 }
 
 // ===============================[  FONTS  ]===================================

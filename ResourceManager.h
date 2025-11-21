@@ -6,14 +6,6 @@
 #include <unordered_map>
 #include "DxPlus/DxPlus.h"
 
-struct Tileset
-{
-    std::wstring key;
-    int chipW = 0, chipH = 0, tileCountX = 0, tileCountY = 0;
-    std::vector<int> handles;
-    std::vector<uint8_t> flags;
-};
-
 class ResourceManager
 {
 public:
@@ -143,7 +135,14 @@ public:
     const DxPlus::Sprite::SpriteBase* GridAt(const std::wstring& key, int x = 0, int y = 0);
     void UnloadGrids();
 
+    int GetMusic(const std::wstring& key);
+    int GetSound(const std::wstring& key);
+
 private:
+    int LoadMusic(const std::wstring& key, const std::wstring& path);
+    int LoadSound(const std::wstring& key, const std::wstring& path);
+    void UnloadMusics();
+    void UnloadSounds();
 
     int LoadFont(const std::wstring& fontName, const std::wstring& path);
     void UnloadFont(const std::wstring& fontName);
@@ -170,6 +169,8 @@ private:
 
     std::unordered_map<std::wstring, GridInfo> grids;
     std::unordered_map<std::wstring, FontInfo> fonts;
+    std::unordered_map<std::wstring, int> musics;
+    std::unordered_map<std::wstring, int> sounds;
 };
 /// <summary>
 /// ResourceManager のシングルトンインスタンスを取得するショートカット

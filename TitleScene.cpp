@@ -12,6 +12,8 @@ void TitleScene::Init()
     frameCount = 0;
 
     fontHandle = RM().GetFont(ResourceKeys::Font_Title);
+
+    StartFadeIn();
 }
 
 void TitleScene::Update()
@@ -21,6 +23,7 @@ void TitleScene::Update()
     {
         Scene* gameScene = SceneManager::GetInstance().GetScene(SceneID::Game);
         SetNextScene(gameScene);
+        StartFadeOut();
         return;
     }
     frameCount++;

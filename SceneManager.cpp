@@ -52,12 +52,18 @@ void SceneManager::Run()
         {
             DxLib::ClearDrawScreen();
 
-            //DxPlus::Debug::SetString(L"06_Sample");
+//            DxPlus::Debug::SetString(L"課題解決①_Sample");
+//            DxPlus::Debug::SetString(L"A、Dで左右移動、スペースでジャンプ");
+//            DxPlus::Debug::SetString(L"マウス左クリックで剣を振る");
+//            DxPlus::Debug::SetString(L"マウス右クリックで炎を生成");
+//            DxPlus::Debug::SetString(L"");
             scene->Drive();
             scene->Render();
 
             if (scene->IsFinished())
             {
+                scene->End();
+
                 Scene* next = scene->GetNextScene();
                 scene->SetNextScene(nullptr);   // 元のシーンのnextSceneをnullptr、finishedをfalseに設定している
 
