@@ -21,9 +21,7 @@ public:
     void Update() override;
 
     [[nodiscard]] bool IsDamageable() const noexcept override { return true; }
-    //void OnHit(int atk) noexcept override;
 private:
-   /* void SetMoveDirection(EnemyDirection dir);*/
 
     EnemyDirection direction{ EnemyDirection::Down };
     DxPlus::Vec2 startPosition;

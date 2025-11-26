@@ -13,7 +13,6 @@
 
 void GameContext::Init()
 {
-//    DxLib::SetMouseDispFlag(FALSE);
 	backgroundSpr = RM().GridAt(ResourceKeys::Background);
 }
 

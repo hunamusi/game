@@ -20,44 +20,6 @@ void Enemy::Init()
 
 void Enemy::Reset()
 {
-
-    // ランダム生成 → グリッドにスナップ → 衝突チェック（空くまでリトライ、最大試行回数あり）
-    auto snapToGrid = [](DxPlus::Vec2& position)
-        {
-            for (size_t i = 0; i < 7; ++i)
-            {
-                float left = 150.0f + static_cast<float>(i) * 120.0f;
-                float right = 150.0f + static_cast<float>(i + 1) * 120.0f;
-                if (position.x > left && position.x <= right)
-                {
-                    position.x = left + 60.0f;
-                    break; // スナップしたら抜ける
-                }
-            }
-
-            // 端の補正（列外）
-            if (position.x >= 990.0f)
-            {
-                position.x = 930.0f;
-            }
-            else if (position.x <= 150.0f)
-            {
-                position.x = 210.0f;
-            }
-
-            // 行（y）のスナップ
-            for (size_t i = 0; i < 6; ++i)
-            {
-                float top = static_cast<float>(i) * 120.0f;
-                float bottom = static_cast<float>(i + 1) * 120.0f;
-                if (position.y > top && position.y <= bottom)
-                {
-                    position.y = top + 60.0f;
-                    break; // スナップしたら抜ける
-                }
-            }
-        };
-
     // 初期生成とリトライ
     const int maxAttempts = 20;
     int attempts = 0;
@@ -78,41 +40,6 @@ void Enemy::Update()
 
     if (IsButtonDown(PLAYER1, BUTTON_TRIGGER1))
     {
-        // ランダム生成処理（Reset と同様に重複チェック）
-        auto snapToGrid = [](DxPlus::Vec2& position)
-            {
-                for (size_t i = 0; i < 7; ++i)
-                {
-                    float left = 150.0f + static_cast<float>(i) * 120.0f;
-                    float right = 150.0f + static_cast<float>(i + 1) * 120.0f;
-                    if (position.x > left && position.x <= right)
-                    {
-                        position.x = left + 60.0f;
-                        break;
-                    }
-                }
-
-                if (position.x >= 990.0f)
-                {
-                    position.x = 930.0f;
-                }
-                else if (position.x <= 150.0f)
-                {
-                    position.x = 210.0f;
-                }
-
-                for (size_t i = 0; i < 6; ++i)
-                {
-                    float top = static_cast<float>(i) * 120.0f;
-                    float bottom = static_cast<float>(i + 1) * 120.0f;
-                    if (position.y > top && position.y <= bottom)
-                    {
-                        position.y = top + 60.0f;
-                        break;
-                    }
-                }
-            };
-
         const int maxAttempts = 20;
         int attempts = 0;
         DxPlus::Vec2 candidate;

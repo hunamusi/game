@@ -17,7 +17,6 @@ class GameContext
 public:
     GameContext() = default;
     ~GameContext() = default;
-
     // 一度だけ呼ぶ初期化（リソースロードは ResourceManager 側で行う）
     void Init();
 
@@ -33,10 +32,10 @@ public:
     Player* GetPlayer() const noexcept { return player; }
     bool IsPositionFree(const DxPlus::Vec2& pos, float radius, const Entity2D* ignore) const noexcept;
 
-
-
 private:
     const DxPlus::Sprite::SpriteBase* backgroundSpr{ nullptr };
+
+
     std::vector<std::unique_ptr<Entity2D>> entities;
     std::vector<std::unique_ptr<Projectile>> projectiles;
     std::vector<std::unique_ptr<Entity2D>> spawnQueue;
