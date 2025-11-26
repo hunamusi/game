@@ -14,7 +14,7 @@ public:
     // •E‚‚³
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
-
+    
 
     DxPlus::Vec2 position{};
     float width{ 32.0f };

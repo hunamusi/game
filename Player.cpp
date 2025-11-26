@@ -21,7 +21,7 @@ void Player::Init()
 
 void Player::Reset()
 {
-    position = { DxPlus::CLIENT_WIDTH * 0.515f, DxPlus::CLIENT_HEIGHT * 0.515f };
+    position = {540 , 300 };
     velocity = {};
 
     if (currentAnim) currentAnim->Reset();

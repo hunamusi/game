@@ -7,7 +7,7 @@
 
 void SceneManager::Init()
 {
-    constexpr bool WINDOWED = true;
+    constexpr bool WINDOWED = false;
     DxPlus::Initialize(DxPlus::CLIENT_WIDTH, DxPlus::CLIENT_HEIGHT, WINDOWED);
     ResourceManager::GetInstance().LoadAll();
     gameContext.Init();

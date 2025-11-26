@@ -13,19 +13,26 @@
 #include <algorithm>
 #include "Wall.h"
 #include "map.h"
-const float TILE_W = 120.0f;
-const float TILE_H = 120.0f;
+#include <cmath>
+
+static int g_tileStatus[Map::GetRows()][Map::GetCols()];
+
 
 void GameContext::Init()
 {
     Walls.clear();
-        // マップ全体を走査し、壁タイルを生成する
-    for (int row = 0; row < Map::GetRows(); row++) // マップの行 (row) を端から端までループ (0 から GetRows()-1 まで)
+
+    // 修正: マップ全体を走査し、状態管理配列を初期化
+    for (int row = 0; row < Map::GetRows(); row++)
     {
-        for (int col = 0; col < Map::GetCols(); col++) // マップの列 (col) を端から端までループ (0 から GetCols()-1 まで)
+        for (int col = 0; col < Map::GetCols(); col++)
         {
-            // マップデータ (Map::GetTileData) が '1' (壁) であるかチェック
-            if (Map::GetTileData(row, col) == 1)
+            // g_tileStatus を Map::GetTileData の初期値で初期化
+            int status = Map::GetTileData(row, col);
+            g_tileStatus[row][col] = status;
+
+            // status が '1' (壁) の場合のみ Wall オブジェクトを生成
+            if (status == 1)
             {
                 // タイル座標 (row, col) に基づいて、ワールド空間での中心座標を計算する
                 DxPlus::Vec2 pos = Map::GetTileCenterPosition(row, col);
@@ -40,7 +47,7 @@ void GameContext::Init()
                 );
             }
         }
-    }	
+    }
     backgroundSpr = RM().GridAt(ResourceKeys::Background);
 
     entities.emplace_back(std::make_unique<Player>());
@@ -81,8 +88,8 @@ void GameContext::Update()
     DxPlus::Vec2 prev = player->GetPrevPosition();
     DxPlus::Vec2& p = player->Position();
 
-    float pw = 30;
-    float ph = 108;
+    float pw = 120;
+    float ph = 120;
     const float Y_COLLISION_OFFSET = 0.0f; // 描画とのズレがないか確認するために 0.0f でテスト
 
     float overlapX = 0;
@@ -138,6 +145,25 @@ void GameContext::Update()
             }
         }
     }
+    // --- プレイヤーの足元のタイルの状態を更新する ---
+    float tw = Map::GetTileWidth();
+    float th = Map::GetTileHeight();
+    DxPlus::Vec2 pos = player->Position();
+
+    // ワールド座標からタイルインデックス (col, row) を計算
+    // Map::GetTileCenterPositionの逆算に基づいて、左上隅の座標からタイルインデックスを求める
+    int col = static_cast<int>(std::floor((pos.x - tw / 2) / tw));
+    int row = static_cast<int>(std::floor((pos.y - th / 2) / th));
+
+    // 境界チェックと状態更新
+    if (row >= 0 && row < Map::GetRows() && col >= 0 && col < Map::GetCols())
+    {
+        // g_tileStatus を直接書き換える
+        if (g_tileStatus[row][col] == 0) // 0: 空の床
+        {
+            g_tileStatus[row][col] = 2; // 2: 歩かれた (色を変える状態)
+        }
+    }
     for (auto& p : projectiles)
     {
         if (!p->IsAlive())continue;
@@ -191,7 +217,40 @@ void GameContext::Draw() const
 {
     float camX = camera.GetX();
     float camY = camera.GetY();
+    float tw = Map::GetTileWidth();
+    float th = Map::GetTileHeight();
+    // --- 床（空のタイル）の描画 ---
+    for (int row = 0; row < Map::GetRows(); row++)
+    {
+        for (int col = 0; col < Map::GetCols(); col++)
+        {
+            int tileStatus = g_tileStatus[row][col]; // g_tileStatusを参照
 
+            // 壁（1）以外のタイル（0:空、2:歩かれた）を描画する
+            if (tileStatus != 1)
+            {
+                DxPlus::Vec2 centerPos = Map::GetTileCenterPosition(row, col);
+                float left = centerPos.x - tw / 2 - camX;
+                float top = centerPos.y - th / 2 - camY;
+
+                unsigned int color;
+                if (tileStatus == 2) {
+                    // 歩かれたタイル: 灰色
+                    color = GetColor(150, 150, 150);
+                }
+                else {
+                    // 空のタイル: デフォルトの濃い色
+                    color = GetColor(50, 50, 100);
+                }
+
+                DxPlus::Primitive2D::DrawRect(
+                    { left, top },
+                    { tw, th },
+                    color
+                );
+            }
+        }
+    }
     for (auto& w : Walls)
     {
         float left = w->GetPos().x - w->GetWidth() / 2 - camX;
@@ -203,18 +262,10 @@ void GameContext::Draw() const
             GetColor(0, 255, 0)
         );
     }
-
-   // backgroundSpr->Draw({ -camX, -camY });
-    for (int i = 0;++i <= 30;) {
-        DxPlus::Primitive2D::DrawRect({ 0+i*120 - camX,400- camY }, { 120,120 },GetColor(0+i*10,0+i*10,0+i*10));
-    }
     for(auto&e:entities)
     {
         e->CameraDraw(camX, camY);
     }
-
-    std::wstring Counttext = L"Player Count" + std::to_wstring(player->GetPlayerCount());
-    DrawString(1000, 0, Counttext.c_str(), GetColor(255, 255, 255));
 }
 
 void GameContext::SpawnProjectile(const DxPlus::Vec2& pos, const DxPlus::Vec2& vel) noexcept

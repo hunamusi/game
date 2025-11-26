@@ -9,6 +9,7 @@
 #include "Projectile.h"
 #include "Camera.h"
 #include "Wall.h"
+#include <cmath>
 // ゲーム全体で共有する"文脈（コンテキスト）"。
 // プレイヤー・敵・マップ・アイテムなどを束ね、
 // シーン（Title / Game / Result）から参照できるようにする。
@@ -37,5 +38,4 @@ private:
     Camera camera;
     std::vector<std::unique_ptr<Projectile>>projectiles;
     std::vector<std::unique_ptr<Wall>> Walls;
-
 };

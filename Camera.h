@@ -40,10 +40,14 @@ public:
             x += (pos.x - x) * followSpeed;
             y += (pos.y - y) * followSpeed;
         }
-        float halfW = 2000 / 2.5f;
-        float halfH = 720 / 2.5f;
-        x = std::clamp(x, halfW, 3000 - halfW);
-        y = std::clamp(y, halfH, 720 - halfH);
+       float halfW = DxPlus::CLIENT_WIDTH  / 2.0f; // 640
+float halfH = DxPlus::CLIENT_HEIGHT / 2.0f; // 360
+
+float mapW = 3600.0f;
+float mapH = 2400.0f;
+
+x = std::clamp(x, halfW, mapW - halfW);
+y = std::clamp(y, halfH, mapH - halfH);
 
     }
     // カメラの**視点（左上隅）**のX座標を返します。
