@@ -12,6 +12,11 @@ namespace ResourceKeys
     // ===== Tiles =====
     inline constexpr const wchar_t* Tiles_Background = L"Tiles_Background";
     inline constexpr const wchar_t* Tiles_Terrain = L"Tiles_Terrain";
+    inline constexpr const wchar_t* Tiles_City = L"Tiles_City";
+    inline constexpr const wchar_t* Building_big = L"Building_big";
+    inline constexpr const wchar_t* Building_small = L"Building_small";
+    inline constexpr const wchar_t* Enemy = L"Enemy";
+
 
     // ===== Fonts =====
     inline constexpr const wchar_t* Font_Title = L"Bitcount Light";

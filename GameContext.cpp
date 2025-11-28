@@ -13,6 +13,7 @@
 #include <algorithm>
 #include "Wall.h"
 #include "map.h"
+#include "item.h"
 #include <cmath>
 
 static int g_tileStatus[Map::GetRows()][Map::GetCols()];
@@ -66,6 +67,15 @@ void GameContext::Init()
     }
     player->Init();
     camera.SetTarget(player);
+    for (int i = 0; i < 6; ++i)
+    {
+        auto item = std::make_unique<Item>();
+        item->BindContext(this);
+        item->Init();
+        Items.push_back(std::move(item));
+    }
+   
+    
 }
 
 void GameContext::Reset()
@@ -73,10 +83,6 @@ void GameContext::Reset()
     for (auto& e : entities) e->Reset();
     projectiles.clear();
 }
-
-// Core/GameContext.cpp (修正箇所)
-
-// Core/GameContext.cpp (修正箇所)
 
 void GameContext::Update()
 {
@@ -204,7 +210,20 @@ void GameContext::Update()
         ), projectiles.end()
 
     );
+    for (auto& item : Items)
+    {
+        float dx = player->Position().x - item->Position().x;
+        float dy = player->Position().y - item->Position().y;
 
+        float dist2 = dx * dx + dy * dy;
+        float r = player->Radius() + item->Radius();
+
+        if (dist2 <= r * r)
+        {
+            item->Reset();     
+        }
+    }
+   
 	std::wstring text = std::wstring(L"Player Position(") +
 		std::to_wstring(static_cast<int>(player->GetPosition().x)) +
 		L"," +
@@ -219,6 +238,9 @@ void GameContext::Draw() const
     float camY = camera.GetY();
     float tw = Map::GetTileWidth();
     float th = Map::GetTileHeight();
+    const DxPlus::Sprite::SpriteBase* tileSprite = RM().GridAt(ResourceKeys::Tiles_City);
+    const DxPlus::Sprite::SpriteBase* BuildingSprite = RM().GridAt(ResourceKeys::Building_big);
+    const DxPlus::Sprite::SpriteBase* BuildingSprite_small = RM().GridAt(ResourceKeys::Building_small);
     // --- 床（空のタイル）の描画 ---
     for (int row = 0; row < Map::GetRows(); row++)
     {
@@ -237,19 +259,38 @@ void GameContext::Draw() const
                 if (tileStatus == 2) {
                     // 歩かれたタイル: 灰色
                     color = GetColor(150, 150, 150);
+                    DrawBox(
+                        (int)left,
+                        (int)top,
+                        (int)(left + tw),
+                        (int)(top + th),
+                        GetColor(150, 150, 150),
+                        TRUE);
                 }
-                else {
+                else if(tileStatus==0) {
                     // 空のタイル: デフォルトの濃い色
-                    color = GetColor(50, 50, 100);
+                    float left = std::floor(centerPos.x - tw / 2 - camX);
+                    float top = std::floor(centerPos.y - th / 2 - camY);
+                    tileSprite->Draw(DxPlus::Vec2 (left,top));
                 }
-
-                DxPlus::Primitive2D::DrawRect(
-                    { left, top },
-                    { tw, th },
-                    color
-                );
+                else if (tileStatus == 3)
+                {
+                    float left = std::floor(centerPos.x - tw / 2 - camX);
+                    float top = std::floor(centerPos.y - th / 2 - camY);
+                    BuildingSprite->Draw(DxPlus::Vec2(centerPos.x-tw/ 2 - camX,((centerPos.y-490)/ 2 - camY)));
+                }
+                else if (tileStatus == 5)
+                {
+                    float left = std::floor(centerPos.x - tw / 2 - camX);
+                    float top = std::floor(centerPos.y - th / 2 - camY);
+                    BuildingSprite_small->Draw(DxPlus::Vec2(left, top + 60));
+                }
             }
         }
+    }
+    for (auto& item : Items)
+    {
+        item->CameraDraw(camX, camY);
     }
     for (auto& w : Walls)
     {
@@ -277,6 +318,22 @@ void GameContext::SpawnProjectile(const DxPlus::Vec2& pos, const DxPlus::Vec2& v
     projectiles.push_back(std::move(pr));
 
 
+}
+
+bool GameContext::IsPositionFree(const DxPlus::Vec2& pos, float radius, const Entity2D* ignore) const noexcept
+{
+    for (const auto& e : entities)
+    {
+        if (!e) continue;
+        if (!e->IsAlive()) continue;
+        if (e.get() == ignore) continue;
+
+        if (Collision2D::CircleVsCircle(pos, radius, e->GetPosition() + e->GetCenterOffset(), e->Radius()))
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 

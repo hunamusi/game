@@ -18,8 +18,12 @@ void ResourceManager::LoadAll()
     LoadGridBottom(ResourceKeys::Enemy_Yankee, L"./Data/Images/yankee.png", { 0,0 }, { 3,4 }, { 96, 128 });
     LoadTextureAsSpriteLeftTop(ResourceKeys::Player_Shot, L"./Data/Images/player_shot.png");
     LoadFont(ResourceKeys::Font_Title, L"./Data/Fonts/Bitcount/static/Bitcount-Light.ttf");
-
+    LoadTextureAsSpriteLeftTop(ResourceKeys::Tiles_City, L"./Data/Images/ground1.png");
+    LoadTextureAsSpriteLeftTop(ResourceKeys::Building_big, L"./Data/Images/building_big.png");
+    LoadTextureAsSpriteLeftTop(ResourceKeys::Building_small, L"./Data/Images//building_small.png");
     RegisterTileset(ResourceKeys::Tiles_Background, L"./Data/MapData/BackChip.png", 64, 64);
+    LoadTextureAsSpriteCenter(ResourceKeys::Enemy, L"./Data/Images/slime.png");
+
     {
         std::vector<int8_t> backTypes
         {

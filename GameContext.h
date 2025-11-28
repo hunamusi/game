@@ -10,6 +10,7 @@
 #include "Camera.h"
 #include "Wall.h"
 #include <cmath>
+#include "Item.h"
 // ゲーム全体で共有する"文脈（コンテキスト）"。
 // プレイヤー・敵・マップ・アイテムなどを束ね、
 // シーン（Title / Game / Result）から参照できるようにする。
@@ -29,6 +30,7 @@ public:
     void Update();
     void Draw() const;
     void SpawnProjectile(const DxPlus::Vec2& pos, const DxPlus::Vec2& vel)noexcept;
+    bool IsPositionFree(const DxPlus::Vec2& pos, float radius, const Entity2D* ignore)const noexcept;
 private:
     const DxPlus::Sprite::SpriteBase* backgroundSpr{ nullptr };
     std::vector<std::unique_ptr<Entity2D>> entities;
@@ -38,4 +40,5 @@ private:
     Camera camera;
     std::vector<std::unique_ptr<Projectile>>projectiles;
     std::vector<std::unique_ptr<Wall>> Walls;
+    std::vector<std::unique_ptr<Item>>Items;
 };
