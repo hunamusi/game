@@ -255,19 +255,8 @@ void GameContext::Draw() const
                 float left = centerPos.x - tw / 2 - camX;
                 float top = centerPos.y - th / 2 - camY;
 
-                unsigned int color;
-                if (tileStatus == 2) {
-                    // 歩かれたタイル: 灰色
-                    color = GetColor(150, 150, 150);
-                    DrawBox(
-                        (int)left,
-                        (int)top,
-                        (int)(left + tw),
-                        (int)(top + th),
-                        GetColor(150, 150, 150),
-                        TRUE);
-                }
-                else if(tileStatus==0) {
+                
+                if(tileStatus==0|| tileStatus == 2) {
                     // 空のタイル: デフォルトの濃い色
                     float left = std::floor(centerPos.x - tw / 2 - camX);
                     float top = std::floor(centerPos.y - th / 2 - camY);
@@ -307,7 +296,41 @@ void GameContext::Draw() const
     {
         e->CameraDraw(camX, camY);
     }
-}
+    DxPlus::Primitive2D::DrawRect({ 990,0 }, { 290,720 }, GetColor(0, 0, 0));
+    for (int row = 0;row < Map::GetRows();row++)
+    {
+        for (int col = 0;col < Map::GetCols();col++)
+        {
+            int tileStatus = g_tileStatus[row][col]; // g_tileStatusを参照
+            DxPlus::Vec2 centerPos = Map::GetTileCenterPosition(row, col);
+            float scale = 0.05;
+            float x = 1050;
+            float y = 0;
+            float MinX = centerPos.x * scale + x;
+            float MinY = centerPos.y * scale + y;
+            float tw2 = tw * scale;
+            float th2 = th * scale;
+            float left = MinX - tw2/ 2;
+            float top = MinY - th2/ 2;
+
+            unsigned int color;
+            if (tileStatus == 2) {
+                // 歩かれたタイル: 灰色
+                color = GetColor(150, 150, 150);
+                DrawBox(
+                    (int)left,
+                    (int)top,
+                    (int)(left + tw2),
+                    (int)(top + th2),
+                    GetColor(150, 150, 150),
+                    TRUE);
+            }
+
+        }
+    }
+    }
+
+
 
 void GameContext::SpawnProjectile(const DxPlus::Vec2& pos, const DxPlus::Vec2& vel) noexcept
 {
