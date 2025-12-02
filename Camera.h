@@ -43,7 +43,7 @@ public:
        float halfW = DxPlus::CLIENT_WIDTH  / 2.0f; // 640
 float halfH = DxPlus::CLIENT_HEIGHT / 2.0f; // 360
 
-float mapW = 3600.0f;
+float mapW = 3840.0f;
 float mapH = 2400.0f;
 
 x = std::clamp(x, halfW, mapW - halfW);

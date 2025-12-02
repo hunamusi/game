@@ -14,6 +14,7 @@
 #include "Wall.h"
 #include "map.h"
 #include "item.h"
+#include "mapdata.h"
 #include <cmath>
 
 static int g_tileStatus[Map::GetRows()][Map::GetCols()];
@@ -53,11 +54,6 @@ void GameContext::Init()
 
     entities.emplace_back(std::make_unique<Player>());
     player = static_cast<Player*>(entities.back().get());
-    entities.push_back(std::make_unique<Enemy>());
-    entities.push_back(std::make_unique<Enemy>());
-    entities.push_back(std::make_unique<Enemy>());
-    entities.push_back(std::make_unique<Enemy>());
-    entities.push_back(std::make_unique<Enemy>());
     projectiles.clear();
     projectiles.reserve(8);
     for (auto& e : entities)
@@ -73,6 +69,7 @@ void GameContext::Init()
         item->BindContext(this);
         item->Init();
         Items.push_back(std::move(item));
+        
     }
    
     
@@ -220,7 +217,35 @@ void GameContext::Update()
 
         if (dist2 <= r * r)
         {
-            item->Reset();     
+            Map::SetMap(MAP2);
+            for (int row = 0;row < Map::GetRows();row++)
+            {
+                for (int col = 0;col < Map::GetCols();col++)
+                {
+                    int status = Map::GetTileData(row,col);
+                    g_tileStatus[row][col] = status;
+                }
+            }
+            Walls.clear();
+            for (int row = 0;row < Map::GetRows();row++)
+            {
+                for (int col = 0;col < Map::GetCols();col++)
+                {
+                    if (g_tileStatus[row][col] == 1)
+                    {
+                        DxPlus::Vec2 pos = Map::GetTileCenterPosition(row, col);
+                        Walls.emplace_back(
+                            std::make_unique<Wall>(
+                                pos,
+                                Map::GetTileWidth(),
+                                Map::GetTileHeight()
+                            )
+                        );
+                    }
+                }
+            }
+            item->Reset();
+
         }
     }
    
@@ -328,7 +353,58 @@ void GameContext::Draw() const
 
         }
     }
+    for (auto& item : Items)
+    {
+        float scale = 0.05f;
+        float offsetX = 1050;
+        float offsetY = 0;
+        float iconSize = 120 * scale;
+        DxPlus::Vec2 pos = item->GetPosition();
+
+        // ミニマップ座標に変換
+        float miniX = pos.x * scale + offsetX;
+        float miniY = pos.y * scale + offsetY;
+
+        float left = miniX - iconSize / 2;
+        float top = miniY - iconSize / 2;
+
+        // 赤い四角で描画
+        DrawBox(
+            (int)left,
+            (int)top,
+            (int)(left + iconSize),
+            (int)(top + iconSize),
+            GetColor(255, 0, 0),
+            TRUE
+        );
     }
+        for (auto& Playre : entities)
+    {
+        float scale = 0.05f;
+        float offsetX = 1050;
+        float offsetY = 0;
+        float iconSize = 120 * scale;
+        DxPlus::Vec2 pos = Playre->GetPosition();
+
+        // ミニマップ座標に変換
+        float miniX = pos.x * scale + offsetX;
+        float miniY = pos.y * scale + offsetY;
+
+        float left = miniX - iconSize / 2;
+        float top = miniY - iconSize / 2;
+
+        // 赤い四角で描画
+        DrawBox(
+            (int)left,
+            (int)top,
+            (int)(left + iconSize),
+            (int)(top + iconSize),
+            GetColor(0, 255, 0),
+            TRUE
+        );
+    }
+
+}
 
 
 

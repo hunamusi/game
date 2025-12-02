@@ -57,4 +57,5 @@ public:
         return { x, y };
     }
     DxPlus::Sprite::SpriteBase* Tile{ nullptr };
+    int nextmap = 1;
 };

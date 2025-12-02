@@ -16,6 +16,7 @@ namespace ResourceKeys
     inline constexpr const wchar_t* Building_big = L"Building_big";
     inline constexpr const wchar_t* Building_small = L"Building_small";
     inline constexpr const wchar_t* Enemy = L"Enemy";
+    inline constexpr const wchar_t* Item = L"Item";
 
 
     // ===== Fonts =====

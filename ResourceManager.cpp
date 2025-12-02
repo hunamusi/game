@@ -23,7 +23,7 @@ void ResourceManager::LoadAll()
     LoadTextureAsSpriteLeftTop(ResourceKeys::Building_small, L"./Data/Images//building_small.png");
     RegisterTileset(ResourceKeys::Tiles_Background, L"./Data/MapData/BackChip.png", 64, 64);
     LoadTextureAsSpriteCenter(ResourceKeys::Enemy, L"./Data/Images/slime.png");
-
+    LoadTextureAsSpriteCenter(ResourceKeys::Item, L"./Data/Images/player_shot.png");
     {
         std::vector<int8_t> backTypes
         {
