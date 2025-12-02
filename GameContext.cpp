@@ -1,4 +1,4 @@
-﻿// =============================
+// =============================
 // Core/GameContext.cpp
 // =============================
 #include "GameContext.h"
@@ -162,9 +162,26 @@ void GameContext::Update()
     if (row >= 0 && row < Map::GetRows() && col >= 0 && col < Map::GetCols())
     {
         // g_tileStatus を直接書き換える
-        if (g_tileStatus[row][col] == 0) // 0: 空の床
+        for (int i = -1;i < 2;i++)
         {
-            g_tileStatus[row][col] = 2; // 2: 歩かれた (色を変える状態)
+            if (g_tileStatus[row][col+i] == 0) // 0: 空の床
+            {
+                g_tileStatus[row][col+i] = 2; // 2: 歩かれた (色を変える状態)
+            }
+            if (g_tileStatus[row+i][col] == 0) // 0: 空の床
+            {
+                g_tileStatus[row+i][col] = 2; // 2: 歩かれた (色を変える状態)
+            }
+            if (g_tileStatus[row + i][col+i] == 0) // 0: 空の床
+            {
+                g_tileStatus[row + i][col+i] = 2; // 2: 歩かれた (色を変える状態)
+            }
+            if (g_tileStatus[row + i][col - i] == 0) // 0: 空の床
+            {
+                g_tileStatus[row + i][col - i] = 2; // 2: 歩かれた (色を変える状態)
+            }
+
+
         }
     }
     for (auto& p : projectiles)
