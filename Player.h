@@ -4,7 +4,6 @@
 #pragma once
 #include "Entity2D.h"
 
-class Sword;
 class Player : public Entity2D
 {
 public:
@@ -15,23 +14,14 @@ public:
     void Init() override;
     void Reset() override;
     void Update() override;
-    void Step() override;
-
-    bool IsSwordSwinging() const noexcept { return isSwordSwinging; }
-    bool CanStartSword() const noexcept { return !isSwordSwinging; }
-    int facingSign() const noexcept { return facingLeft ? -1 : 1; }
-
+    int GetPlayerCount()const { return PlayerCount; }
+    const DxPlus::Vec2& GetPrevPosition() const { return prevPos; }
 private:
-    DxPlus::Vec2 prevVelocity{ 0,1 };
-    int shootInterval{};
-    int rotate{};
-    bool jumpPressed{ false };
-    bool jumpHeld{ false };
-    //Œ•‚Å’Ç‰Á
-    bool isSwordSwinging = false;
-    int swordTimer = 0;
-    bool facingLeft = false;
+    DxPlus::Vec2 prevVelocity = { 0,1 };
+    int PlayerCount = 20;
+    DxPlus::Vec2 prevPos{};
+    static constexpr float HALF_WIDTH = 30;
+    static constexpr float HEIGHT = 108;
 
-    Sword* sword = nullptr;   
 
 };

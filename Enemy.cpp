@@ -6,84 +6,75 @@
 #include "ResourceKeys.h"
 #include "Consts.h"
 #include "AnimationUtil.h"
-#include "GameContext.h"
-#include "Explosion.h"
-#include "Player.h"
-#include <cmath>
 
 void Enemy::Init()
 {
+    sprite = RM().GridAt(ResourceKeys::Enemy_Yankee, 1, 2);
 
+    AnimationUtil::BuildWalk(animLeft,  3, RM(), ResourceKeys::Enemy_Yankee, 8);
+    AnimationUtil::BuildWalk(animRight, 1, RM(), ResourceKeys::Enemy_Yankee, 8);
+    AnimationUtil::BuildWalk(animUp,    0, RM(), ResourceKeys::Enemy_Yankee, 8);
+    AnimationUtil::BuildWalk(animDown,  2, RM(), ResourceKeys::Enemy_Yankee, 8);
 
-    sprite = RM().GridAt(ResourceKeys::Enemy);
+    currentAnim = &animDown;
 }
 
 void Enemy::Reset()
 {
-    // 初期生成とリトライ
-    const int maxAttempts = 20;
-    int attempts = 0;
-    do
-    {
-        position = { static_cast<float>(rand() % DxPlus::CLIENT_WIDTH), static_cast<float>(rand() % DxPlus::CLIENT_HEIGHT) };
-        snapToGrid(position);
-        ++attempts;
-        // ループはここで止まり、IsPositionFree を使って他のエネミーと重ならない位置を探す
-    } while (attempts < maxAttempts && !GC().IsPositionFree(position, Radius(), this));
+    position = {
+        static_cast<float>(rand()%DxPlus::CLIENT_WIDTH), static_cast<float>(rand()%DxPlus::CLIENT_HEIGHT)
+    };
+    velocity = { 0, 4 };
 
-    // 最終的に見つからなければそのまま配置（重複はまれ）
+    if (currentAnim) currentAnim->Reset();
+    startPosition = position;
 }
 
 void Enemy::Update()
 {
-    using namespace DxPlus::Input;
-
-    if (IsButtonDown(PLAYER1, BUTTON_TRIGGER1))
+    switch (direction)
     {
-        const int maxAttempts = 20;
-        int attempts = 0;
-        DxPlus::Vec2 candidate;
-        do
-        {
-            candidate = { static_cast<float>(rand() % DxPlus::CLIENT_WIDTH), static_cast<float>(rand() % DxPlus::CLIENT_HEIGHT) };
-            snapToGrid(candidate);
-            ++attempts;
-        } while (attempts < maxAttempts && !GC().IsPositionFree(candidate, Radius(), this));
-
-        position = candidate;
+    case EnemyDirection::Down:
+        if (position.y >= startPosition.y + Const::MOVE_DISTANCE) SetMoveDirection(EnemyDirection::Left); break;
+    case EnemyDirection::Left:
+        if (position.x <= startPosition.x - Const::MOVE_DISTANCE) SetMoveDirection(EnemyDirection::Up); break;
+    case EnemyDirection::Up:
+        if (position.y <= startPosition.y - Const::MOVE_DISTANCE) SetMoveDirection(EnemyDirection::Right); break;
+    case EnemyDirection::Right:
+        if (position.x >= startPosition.x + Const::MOVE_DISTANCE) SetMoveDirection(EnemyDirection::Down); break;
+        break;
     }
 
-    if (IsButtonDown(PLAYER1, BUTTON_START))
+    if (currentAnim) currentAnim->Update();
+}
+
+void Enemy::OnHit(int atk) noexcept
+{
+    int damege = atk < 1 ? 1 : atk;
+    hp = std::max(hp-damege, 0);
+    if (hp <= 0){alive = 0;}
+}
+
+void Enemy::SetMoveDirection(EnemyDirection dir)
+{
+    direction = dir;
+    switch (direction)
     {
-        Player* playerPtr = GC().GetPlayer();
-        if (playerPtr == nullptr) return;
-
-        DxPlus::Vec2 playerPosition = playerPtr->GetPosition();
-
-        // X 軸移動候補
-        float diffX = playerPosition.x - position.x;
-        if (std::fabs(diffX) > 0.0001f)
-        {
-            float candidateX = position.x + (diffX > 0.0f ? 120.0f : -120.0f);
-            DxPlus::Vec2 newPosX = { candidateX, position.y };
-            if (GC().IsPositionFree(newPosX, Radius(), this))
-            {
-                position.x = candidateX;
-            }
-        }
-
-        // Y 軸移動候補（X移動後の位置を基準にチェックする）
-        float diffY = playerPosition.y - position.y;
-        if (std::fabs(diffY) > 0.0001f)
-        {
-            float candidateY = position.y + (diffY > 0.0f ? 120.0f : -120.0f);
-            DxPlus::Vec2 newPosY = { position.x, candidateY };
-            if (GC().IsPositionFree(newPosY, Radius(), this))
-            {
-                position.y = candidateY;
-            }
-        }
+    case EnemyDirection::Down:
+        velocity = { 0, Const::ENEMY_SPEED };
+        currentAnim = &animDown;
+        break;
+    case EnemyDirection::Left:
+        velocity = { -Const::ENEMY_SPEED, 0 };
+        currentAnim = &animLeft;
+        break;
+    case EnemyDirection::Up:
+        velocity = { 0, -Const::ENEMY_SPEED };
+        currentAnim = &animUp;
+        break;
+    case EnemyDirection::Right:
+        velocity = { Const::ENEMY_SPEED, 0 };
+        currentAnim = &animRight;
+        break;
     }
-
-
 }

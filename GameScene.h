@@ -12,7 +12,6 @@ public:
     void Init() override;
     void Update() override;
     void Render() const override;
-    void End() override;
 
 private:
 };

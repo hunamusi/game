@@ -6,7 +6,7 @@
 
 void Scene::Drive()
 {
-#if 0   // フェードを有効にする場合は#if 0に変更すること
+#if 1   // フェードを有効にする場合は#if 0に変更すること
     Update();
 #else
     UpdateFadeController();
@@ -20,7 +20,7 @@ void Scene::Drive()
 void Scene::SetNextScene(Scene* scene)
 {
     nextScene = scene;
-    //finished = (scene != nullptr);  // フェードイン/アウトさせたい場合はこの行をコメントアウト
+    finished = (scene != nullptr);  // フェードイン/アウトさせたい場合はこの行をコメントアウト
 }
 
 void Scene::UpdateFadeController()

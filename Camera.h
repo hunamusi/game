@@ -2,6 +2,7 @@
 #include"DxPlus/DxPlus.h"
 #include"Entity2D.h"     
 #include "GameContext.h" 
+#include <algorithm>
 
 class Camera
 {
@@ -17,14 +18,12 @@ public:
             y = target->GetPosition().y;
         }
     }
-
     // カメラの状態を更新します（主にターゲットの追尾処理）。
     void Update()
     {
         if (!target) return; // 追跡対象がなければ何もしません。
 
         auto pos = target->GetPosition(); // ターゲットの現在の位置を取得
-
         // 最初の更新時のみ、カメラをターゲットの位置に瞬間移動させます（スムーズな追尾を開始しないため）。
         if (firstUpdate)
         {
@@ -41,18 +40,24 @@ public:
             x += (pos.x - x) * followSpeed;
             y += (pos.y - y) * followSpeed;
         }
-    }
+       float halfW = DxPlus::CLIENT_WIDTH  / 2.0f; // 640
+float halfH = DxPlus::CLIENT_HEIGHT / 2.0f; // 360
 
+float mapW = 3600.0f;
+float mapH = 2400.0f;
+
+x = std::clamp(x, halfW, mapW - halfW);
+y = std::clamp(y, halfH, mapH - halfH);
+
+    }
     // カメラの**視点（左上隅）**のX座標を返します。
     // カメラの中心座標 x から、クライアント（画面）幅の半分を引くことで、
     // 画面の左端がどのワールド座標に来るかを計算しています。
     float GetX() const { return x - DxPlus::CLIENT_WIDTH / 2; }
-
     // カメラの**視点（左上隅）**のY座標を返します。
     // カメラの中心座標 y から、クライアント（画面）高さの半分を引くことで、
     // 画面の上端がどのワールド座標に来るかを計算しています。
     float GetY() const { return y - DxPlus::CLIENT_HEIGHT / 2; }
-
 private:
     // カメラの中心のワールド座標（X軸）。
     float x = 0;

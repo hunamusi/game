@@ -9,15 +9,14 @@ namespace ResourceKeys
     inline constexpr const wchar_t* Enemy_Yankee = L"Yankee";
     inline constexpr const wchar_t* Background = L"Background";
     inline constexpr const wchar_t* Player_Shot = L"PlayerShot";
-    inline constexpr const wchar_t* Explosion = L"Explosion";
-    inline constexpr const wchar_t* Player_Sword = L"PlayerSword";
-    inline constexpr const wchar_t* Fire = L"Fire";
+    // ===== Tiles =====
+    inline constexpr const wchar_t* Tiles_Background = L"Tiles_Background";
+    inline constexpr const wchar_t* Tiles_Terrain = L"Tiles_Terrain";
+    inline constexpr const wchar_t* Tiles_City = L"Tiles_City";
+    inline constexpr const wchar_t* Building_big = L"Building_big";
+    inline constexpr const wchar_t* Building_small = L"Building_small";
     inline constexpr const wchar_t* Enemy = L"Enemy";
 
-    // ===== Musics / Sounds =====
-    inline constexpr const wchar_t* BGM_Game = L"BGM_Game";
-    inline constexpr const wchar_t* SE_Explosion = L"Explosion";
-    inline constexpr const wchar_t* SE_PlayerShot = L"PlayerShot";
 
     // ===== Fonts =====
     inline constexpr const wchar_t* Font_Title = L"Bitcount Light";

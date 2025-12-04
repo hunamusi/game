@@ -73,3 +73,4 @@ namespace Collision2D {
             // ‚©‚Â A ‚Ì‰º’[‚ª B ‚Ìã’[‚æ‚è‰º‚É‚ ‚é (aBottom > bTop)
             aTop < bBottom && aBottom > bTop);
     }
+}

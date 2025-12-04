@@ -13,21 +13,42 @@ ResourceManager& ResourceManager::GetInstance()
 
 void ResourceManager::LoadAll()
 {
-    LoadTextureAsSpriteLeftTop(ResourceKeys::Background, L"./Data/Images/back.png");
     LoadGridBottom(ResourceKeys::Player, L"./Data/Images/player.png", { 0,0 }, { 3,4 }, { 96,128 });
     LoadGridBottom(ResourceKeys::Enemy_Yankee, L"./Data/Images/yankee.png", { 0,0 }, { 3,4 }, { 96, 128 });
-    LoadTextureAsSpriteCenter(ResourceKeys::Player_Shot, L"./Data/Images/player_shot.png");
-    LoadGridCenter(ResourceKeys::Explosion, L"./Data/Images/explosion.png", { 0,0 }, { 10,3 }, { 256,256 });
-    LoadTextureAsSpriteBottom(ResourceKeys::Explosion, L"./Data/Images/sword.png");
-    LoadTextureAsSpriteBottom(ResourceKeys::Player_Sword, L"./Data/Images/sword.png");
-    LoadTextureAsSpriteCenter(ResourceKeys::Fire,L"./Data/Images/fire.png");
+    LoadTextureAsSpriteLeftTop(ResourceKeys::Player_Shot, L"./Data/Images/player_shot.png");
+    LoadFont(ResourceKeys::Font_Title, L"./Data/Fonts/Bitcount/static/Bitcount-Light.ttf");
+    LoadTextureAsSpriteLeftTop(ResourceKeys::Tiles_City, L"./Data/Images/ground1.png");
+    LoadTextureAsSpriteLeftTop(ResourceKeys::Building_big, L"./Data/Images/building_big.png");
+    LoadTextureAsSpriteLeftTop(ResourceKeys::Building_small, L"./Data/Images//building_small.png");
+    RegisterTileset(ResourceKeys::Tiles_Background, L"./Data/MapData/BackChip.png", 64, 64);
     LoadTextureAsSpriteCenter(ResourceKeys::Enemy, L"./Data/Images/slime.png");
 
-    LoadMusic(ResourceKeys::BGM_Game,       L"./Data/Sounds/maou_bgm_8bit14.mp3");
-    LoadSound(ResourceKeys::SE_Explosion,   L"./Data/Sounds/Explosion.mp3");
-    LoadSound(ResourceKeys::SE_PlayerShot,  L"./Data/Sounds/PlayerShot.wav");
+    {
+        std::vector<int8_t> backTypes
+        {
+            Tile_None,  Tile_None,  Tile_None,  Tile_None,  Tile_None,  Tile_None,  Tile_None,  Tile_None,
+            Tile_Water, Tile_Water, Tile_Water, Tile_Water, Tile_Water, Tile_Water, Tile_Water, Tile_Water,
+        };
+        Tileset* ts = GetTileset(ResourceKeys::Tiles_Background);
+        const size_t totalTiles = static_cast<size_t>(ts->tileCountX * ts->tileCountY);
+        backTypes.resize(totalTiles, Tile_None);
+        if (ts) ts->types = std::move(backTypes);
+    }
 
-    LoadFont(ResourceKeys::Font_Title, L"./Data/Fonts/Bitcount/static/Bitcount-Light.ttf");
+    
+
+    RegisterTileset(ResourceKeys::Tiles_Terrain, L"./Data/MapData/TerrainChip.png", 64, 64);
+    {
+        std::vector<int8_t> terrainTypes
+        {
+            Tile_Solid, Tile_Solid, Tile_Solid, Tile_Solid, Tile_Solid, Tile_Solid, Tile_Platform, Tile_Platform,
+            Tile_Solid, Tile_Solid, Tile_Solid, Tile_Solid, Tile_Solid, Tile_Solid, Tile_Platform, Tile_Platform,
+        };
+        Tileset* ts = GetTileset(ResourceKeys::Tiles_Terrain);
+        const size_t totalTiles = static_cast<size_t>(ts->tileCountX * ts->tileCountY);
+        terrainTypes.resize(totalTiles, Tile_None);
+        if (ts) ts->types = std::move(terrainTypes);
+    }
 }
 
 void ResourceManager::UnloadAll()
@@ -58,51 +79,36 @@ void ResourceManager::UnloadGrids()
     }
     grids.clear();
 }
-
-int ResourceManager::GetMusic(const std::wstring& key)
+Tileset* ResourceManager::GetTileset(const std::wstring& key)
 {
-    auto it = musics.find(key);
-    return (it != musics.end()) ? it->second : -1;
+    auto it = tilesets.find(key);
+    if (it == tilesets.end()) return nullptr;
+    return &it->second;
 }
 
-int ResourceManager::GetSound(const std::wstring& key)
+int ResourceManager::GetTileHandle(const std::wstring& key, int tileID)
 {
-    auto it = sounds.find(key);
-    return (it != sounds.end()) ? it->second : -1;
+    const Tileset* ts = GetTileset(key);
+    if (!ts) return -1;
+    if (tileID < 0 || tileID >= static_cast<int>(ts->handles.size())) return -1;
+    return ts->handles[tileID];
 }
-
-int ResourceManager::LoadMusic(const std::wstring& key, const std::wstring& path)
+int8_t ResourceManager::GetTileType(const std::wstring& key, int tileID)
 {
-    int music = DxLib::LoadSoundMem(path.c_str());
-    if (music == -1) DxPlus::Utils::FatalError((L"Failed to load music " + path).c_str());
-    musics[key] = music;
-    return music;
+    const Tileset* ts = GetTileset(key);
+    if (!ts)return-1;
+    if (tileID < 0 || tileID >= static_cast<int>(ts->handles.size())) return TileType::Tile_None;
+    return ts->types[tileID];
 }
-
-int ResourceManager::LoadSound(const std::wstring& key, const std::wstring& path)
+void ResourceManager::UnregisterTileset(const std::wstring& key)
 {
-    int sound = DxLib::LoadSoundMem(path.c_str());
-    if (sound == -1) DxPlus::Utils::FatalError((L"Failed to load music " + path).c_str());
-    sounds[key] = sound;
-    return sound;
-}
-
-void ResourceManager::UnloadMusics()
-{
-    for (auto& m : musics)
+    auto it = tilesets.find(key);               // tilesetsからkeyのタイルセットを探す
+    if (it == tilesets.end()) return;           // 結果がtilesets.end()なら、見つからなかった
+    for (auto h : it->second.handles)           // 全ての画像でループする
     {
-        if (m.second >= 0) DxLib::DeleteSoundMem(m.second);
+        if (h >= 0) DxPlus::Sprite::Delete(h);  // 画像IDが0以上ならその画像を削除する
     }
-    musics.clear();
-}
-
-void ResourceManager::UnloadSounds()
-{
-    for (auto& s : sounds)
-    {
-        if (s.second >= 0) DxLib::DeleteSoundMem(s.second);
-    }
-    sounds.clear();
+    tilesets.erase(it);                         // tilesetsから指定キーのタイルセットを削除する
 }
 
 // ===============================[  FONTS  ]===================================
@@ -135,6 +141,39 @@ int ResourceManager::LoadFont(const std::wstring& fontName, const std::wstring& 
     return handle;
 }
 
+bool ResourceManager::RegisterTileset(const std::wstring& key, const std::wstring& path, int chipW, int chipH)
+{
+    // DxLibの機能で画像全体の幅と高さを取得する
+    int handle = DxLib::LoadGraph(path.c_str());
+    if (handle < 0) return false;
+
+    int iw{ 0 }, ih{ 0 };
+    DxLib::GetGraphSize(handle, &iw, &ih);
+    DxLib::DeleteGraph(handle);
+
+    const int tileCountX = iw / chipW;  // 横方向のタイル数
+    const int tileCountY = ih / chipH;  // 縦方向のタイル数
+    if (tileCountX <= 0 || tileCountY <= 0) return false;
+
+
+    std::vector<int> hs(tileCountX * tileCountY, -1);
+    if (DxPlus::Sprite::LoadDivGraph(path, tileCountX * tileCountY, tileCountX, tileCountY,
+        chipW, chipH, hs.data()) == -1)
+    {
+        DxPlus::Utils::FatalError((L"Failed to LoadDivGraph :" + path).c_str());
+    }
+
+    Tileset ts{};
+    ts.key = key;
+    ts.chipW = chipW;
+    ts.chipH = chipH;
+    ts.tileCountX = tileCountX;
+    ts.tileCountY = tileCountY;
+    ts.handles = std::move(hs);
+    tilesets[key] = ts;
+
+    return true;
+}
 void ResourceManager::UnloadFont(const std::wstring& fontName)
 {
     auto it = fonts.find(fontName);
