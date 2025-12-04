@@ -18,8 +18,7 @@ public:
     // ↑ 定数: マップの行数(20)と列数(30)を定義しています。
     //   'static constexpr' は、コンパイル時に値が決定される定数であることを示します。
 
- /*   static const int (*CurrentMap)[30];*/
-    inline static const int (*CurrentMap)[30] = nullptr;
+    static const int (*CurrentMap)[30];
     // ↑ 静的メンバ変数: 現在使用されているマップデータを指すポインタです。
     //   型は「30個のintの配列へのポインタ」で、これは2次元配列（int map[ROWS][30]）を指すために使われます。
     //   'const' は、ポインタが指す配列の内容が変更されないことを示します。

@@ -40,8 +40,8 @@ public:
             x += (pos.x - x) * followSpeed;
             y += (pos.y - y) * followSpeed;
         }
-       float halfW = DxPlus::CLIENT_WIDTH  / 2.0f; // 640
-float halfH = DxPlus::CLIENT_HEIGHT / 2.0f; // 360
+       float halfW = DxPlus::CLIENT_WIDTH  / 4.0f; // 640
+float halfH = DxPlus::CLIENT_HEIGHT / 4.0f; // 360
 
 float mapW = 3600.0f;
 float mapH = 2400.0f;

@@ -7,6 +7,9 @@
 #include "Consts.h"
 #include "AnimationUtil.h"
 #include "GameContext.h"
+
+int PlayerWalkCount = 0;
+
 void Player::Init()
 {
     sprite = RM().GridAt(ResourceKeys::Player, 1, 2);
@@ -43,34 +46,48 @@ void Player::Update()
     float vx{}, vy{};
     if (PlayerCount >= 0)
     {
-    if (left && !right)
-    {
-        
-        vx = -Const::PLAYER_SPEED;
-        nextAnim = &animLeft;
-        isMoving = true;
-       
+        if (left && !right)
+        {
+
+            vx = -Const::PLAYER_SPEED;
+            nextAnim = &animLeft;
+            isMoving = true;
+
+            PlayerWalkCount++;
+            PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
+
+        }
+        else if (!left && right)
+        {
+
+            vx = Const::PLAYER_SPEED;
+            nextAnim = &animRight;
+            isMoving = true;
+
+            PlayerWalkCount++;
+            PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
+        }
+        if (up && !down)
+        {
+            vy = -Const::PLAYER_SPEED;
+            nextAnim = &animUp;
+            isMoving = true;
+
+            PlayerWalkCount++;
+            PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
+        }
+        else if (!up && down)
+        {
+            vy = Const::PLAYER_SPEED;
+            nextAnim = &animDown;
+            isMoving = true;
+
+            PlayerWalkCount++;
+            PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
+        }
     }
-    else if (!left && right)
-    {
-        
-        vx = Const::PLAYER_SPEED;
-        nextAnim = &animRight;
-        isMoving = true;
-    }
-    if (up && !down)
-    {
-        vy = -Const::PLAYER_SPEED;
-        nextAnim = &animUp;
-        isMoving = true;
-    }
-    else if (!up && down)
-    {
-        vy = Const::PLAYER_SPEED;
-        nextAnim = &animDown;
-        isMoving = true;
-    }
-    }
+
+
     velocity = { vx, vy };
     if (vx != 0 || vy != 0)
     {
@@ -86,10 +103,31 @@ void Player::Update()
     int buttonDown = GetButtonDown(PLAYER1);
     bool shoot = (buttonDown & BUTTON_TRIGGER2) != 0;
 
-    if (shoot)
+    if (shoot && PlayerWalkCount == Const::MAX_PLAYER_WALK_COUNT)
     {
-       DxPlus::Vec2 dir= prevVelocity.Normalize();
-       dir*=Const::PROJECTILE_SPEED;
-       GC().SpawnProjectile(position,dir);
+        DxPlus::Vec2 dir{ 0.0f, 0.0f };
+        const float EPS = 0.0001f;
+        if (std::fabs(prevVelocity.x) > EPS || std::fabs(prevVelocity.y) > EPS)
+        {
+            dir = prevVelocity.Normalize();
+        }
+        else
+        {
+            if (currentAnim == &animLeft) dir = DxPlus::Vec2{ -1.0f, 0.0f };
+            else if (currentAnim == &animRight) dir = DxPlus::Vec2{ 1.0f, 0.0f };
+            else if (currentAnim == &animUp) dir = DxPlus::Vec2{ 0.0f, -1.0f };
+            else dir = DxPlus::Vec2{ 0.0f, 1.0f }; // down
+        }
+
+        dir = dir.Normalize() * Const::PROJECTILE_SPEED;
+        DxPlus::Vec2 spawnPos = { position.x - 10, position.y - 40 };
+
+        // 変更: SpawnProjectile の成否を受け取り、成功時のみカウントをリセット
+        bool spawned = GC().SpawnProjectile(spawnPos, dir);
+        if (spawned) {
+            PlayerWalkCount = 0;
+        }
     }
+
+
 }

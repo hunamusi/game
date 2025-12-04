@@ -18,6 +18,10 @@
 
 static int g_tileStatus[Map::GetRows()][Map::GetCols()];
 
+extern int PlayerWalkCount;
+
+// ファイルスコープの保留バッファ：描画や反復処理中に直接 projectiles を変更しないために利用する
+static std::vector<std::unique_ptr<Projectile>> g_pendingProjectiles;
 
 void GameContext::Init()
 {
@@ -53,11 +57,12 @@ void GameContext::Init()
 
     entities.emplace_back(std::make_unique<Player>());
     player = static_cast<Player*>(entities.back().get());
-    entities.push_back(std::make_unique<Enemy>());
-    entities.push_back(std::make_unique<Enemy>());
-    entities.push_back(std::make_unique<Enemy>());
-    entities.push_back(std::make_unique<Enemy>());
-    entities.push_back(std::make_unique<Enemy>());
+
+    for (size_t i = 0; i < 10; i++)
+    {
+        entities.push_back(std::make_unique<Enemy>());
+    }
+
     projectiles.clear();
     projectiles.reserve(8);
     for (auto& e : entities)
@@ -74,22 +79,89 @@ void GameContext::Init()
         item->Init();
         Items.push_back(std::move(item));
     }
-   
-    
 }
 
 void GameContext::Reset()
 {
     for (auto& e : entities) e->Reset();
     projectiles.clear();
+    g_pendingProjectiles.clear();
 }
 
 void GameContext::Update()
 {
-    player->Update();
+    // player が nullptr のときは早期リターンしてクラッシュを防ぐ
+    if (!player) {
+        DxPlus::Debug::SetString(L"GameContext::Update: player == nullptr");
+        return;
+    }
+
+    // フレーム開始時の全エンティティの位置を保存（移動キャンセル用）
+    std::vector<DxPlus::Vec2> prevPositions;
+    prevPositions.reserve(entities.size());
+    for (auto& e : entities)
+    {
+        prevPositions.push_back(e ? e->GetPosition() : DxPlus::Vec2{});
+    }
+
     camera.Update();
     for (auto& e : entities) e->Update();
     for (auto& e : entities) e->Step();
+
+    // --- 保留中の発射物を安全なタイミングで projectiles に移す ---
+    if (!g_pendingProjectiles.empty())
+    {
+        // 最大数を超えないように移動する
+        size_t maxP = static_cast<size_t>(Const::MAX_PROJECTILES);
+        while (!g_pendingProjectiles.empty() && projectiles.size() < maxP)
+        {
+            // back() を使って pop_back で移動（順序を気にしない場合これで十分）
+            projectiles.push_back(std::move(g_pendingProjectiles.back()));
+            g_pendingProjectiles.pop_back();
+        }
+        // もし保留が残っているなら破棄（Spawn側で既にチェックしているはずだが念のため）
+        if (!g_pendingProjectiles.empty())
+        {
+            g_pendingProjectiles.clear();
+        }
+    }
+
+    for (auto& p : projectiles) if (p) p->Update();
+    for (auto& p : projectiles) if (p) p->Step();
+
+    // プレイヤーが他エンティティと重なったらプレイヤーの移動を取り消す
+    size_t playerIndex = SIZE_MAX;
+    for (size_t i = 0; i < entities.size(); ++i)
+    {
+        if (entities[i].get() == player) { playerIndex = i; break; }
+    }
+
+    if (playerIndex != SIZE_MAX)
+    {
+        DxPlus::Vec2 playerCenter = player->GetPosition() + player->GetCenterOffset();
+        float playerR = player->Radius();
+
+        bool collided = false;
+        for (size_t j = 0; j < entities.size(); ++j)
+        {
+            if (j == playerIndex) continue;
+            auto& e = entities[j];
+            if (!e || !e->IsAlive()) continue;
+
+            DxPlus::Vec2 eCenter = e->GetPosition() + e->GetCenterOffset();
+            if (Collision2D::CircleVsCircle(playerCenter, playerR, eCenter, e->Radius()))
+            {
+                collided = true;
+                break;
+            }
+        }
+
+        if (collided)
+        {
+            // 移動をキャンセルして元の位置に戻す
+            player->SetPosition(prevPositions[playerIndex]);
+        }
+    }
 
     DxPlus::Vec2 prev = player->GetPrevPosition();
     DxPlus::Vec2& p = player->Position();
@@ -151,6 +223,7 @@ void GameContext::Update()
             }
         }
     }
+
     // --- プレイヤーの足元のタイルの状態を更新する ---
     float tw = Map::GetTileWidth();
     float th = Map::GetTileHeight();
@@ -170,25 +243,29 @@ void GameContext::Update()
             g_tileStatus[row][col] = 2; // 2: 歩かれた (色を変える状態)
         }
     }
-    for (auto& p : projectiles)
-    {
-        if (!p->IsAlive())continue;
 
+    for (auto& p : projectiles) {
+        if (!p->IsAlive()) continue;
+        // 存在してない弾は、とばす 
         for (auto& e : entities)
         {
-            if (!e->IsAlive() ||
-                !e->IsDamageable())continue;
-
+            if (!e->IsAlive() || // 存在していない敵は、とばす 
+                !e->IsDamageable())
+                continue; // ダメージを受けないエンティティは、とばす 
             if (Collision2D::CircleVsCircle(
+                // 円と円のあたり判定を行う 
                 p->GetPosition(), p->Radius(),
-                e->GetPosition() + e->GetCenterOffset(), e->Radius()))
+                // 位置と半径を入れる 
+                e->GetPosition() + e->GetCenterOffset(),
+                e->Radius()))
             {
                 e->OnHit(p->Attack());
+                // 敵の OnHit 関数に弾の攻撃力を渡す 
                 p->Kill();
+                // 弾は 1 回あたったら消す 
                 break;
             }
         }
-        
     }
 
     //存在が消えたEntity2Dをentitiesから削除する
@@ -221,20 +298,51 @@ void GameContext::Update()
 
         if (dist2 <= r * r)
         {
-            item->Reset();     
+            item->Reset();
         }
     }
-   
-	std::wstring text = std::wstring(L"Player Position(") +
-		std::to_wstring(static_cast<int>(player->GetPosition().x)) +
-		L"," +
-		std::to_wstring(static_cast<int>(player->GetPosition().y)) +
-		L")";
-	DxPlus::Debug::SetString(text);
+
+    using namespace DxPlus::Input; 
+    int button = GetButtonDown(PLAYER1);
+    bool up = (button & BUTTON_TRIGGER3) != 0;
+    bool down = (button & BUTTON_TRIGGER4) != 0;
+
+    if (up)
+    {
+        Attractiveness++;
+    }
+    if (down)
+    {
+        Attractiveness--;
+        if (Attractiveness < 0)
+        {
+            Attractiveness = 0;
+        }
+    }
+
+
+    std::wstring text =
+        std::wstring(L"Player Position(") +
+        std::to_wstring(static_cast<int>(player->GetPosition().x)) +
+        L"," +
+        std::to_wstring(static_cast<int>(player->GetPosition().y)) +
+        L")  WalkCount=" +
+        std::to_wstring(static_cast<int>(PlayerWalkCount)) +
+        L"\n魅力度上げるShift下げるAlt" +
+        std::to_wstring(static_cast<int>(Attractiveness));
+    DxPlus::Debug::SetString(text);
+}
+
+namespace {
+    constexpr float PI_F = 3.14159265358979323846f;
+    inline float DegToRad(float deg) noexcept { return deg * (PI_F / 180.0f); }
 }
 
 void GameContext::Draw() const
 {
+    // player が nullptr のときは早期リターンしてクラッシュを防ぐ
+    if (!player) return;
+
     float camX = camera.GetX();
     float camY = camera.GetY();
     float tw = Map::GetTileWidth();
@@ -268,23 +376,11 @@ void GameContext::Draw() const
                         GetColor(150, 150, 150),
                         TRUE);
                 }
-                else if(tileStatus==0) {
+                if (tileStatus == 0 || tileStatus == 2) {
                     // 空のタイル: デフォルトの濃い色
                     float left = std::floor(centerPos.x - tw / 2 - camX);
                     float top = std::floor(centerPos.y - th / 2 - camY);
-                    tileSprite->Draw(DxPlus::Vec2 (left,top));
-                }
-                else if (tileStatus == 3)
-                {
-                    float left = std::floor(centerPos.x - tw / 2 - camX);
-                    float top = std::floor(centerPos.y - th / 2 - camY);
-                    BuildingSprite->Draw(DxPlus::Vec2(centerPos.x-tw/ 2 - camX,((centerPos.y-490)/ 2 - camY)));
-                }
-                else if (tileStatus == 5)
-                {
-                    float left = std::floor(centerPos.x - tw / 2 - camX);
-                    float top = std::floor(centerPos.y - th / 2 - camY);
-                    BuildingSprite_small->Draw(DxPlus::Vec2(left, top + 60));
+                    tileSprite->Draw(DxPlus::Vec2(left, top));
                 }
             }
         }
@@ -304,25 +400,86 @@ void GameContext::Draw() const
             GetColor(0, 255, 0)
         );
     }
-    for(auto&e:entities)
+    for (auto& e : entities)
     {
         e->CameraDraw(camX, camY);
     }
+
+    for (auto& pr : projectiles)
+    {
+        if (pr && pr->IsAlive())
+        {
+            pr->CameraDraw(camX, camY);
+        }
+    }
+
+    DxPlus::Primitive2D::DrawRect({ 990,0 }, { 290,720 }, GetColor(0, 0, 0));
+    for (int row = 0; row < Map::GetRows(); row++)
+    {
+        for (int col = 0; col < Map::GetCols(); col++)
+        {
+            int tileStatus = g_tileStatus[row][col]; // g_tileStatusを参照
+            DxPlus::Vec2 centerPos = Map::GetTileCenterPosition(row, col);
+            float scale = 0.05;
+            float x = 1050;
+            float y = 0;
+            float MinX = centerPos.x * scale + x;
+            float MinY = centerPos.y * scale + y;
+            float tw2 = tw * scale;
+            float th2 = th * scale;
+            float left = MinX - tw2 / 2;
+            float top = MinY - th2 / 2;
+
+            unsigned int color;
+            if (tileStatus == 2) {
+                // 歩かれたタイル: 灰色
+                color = GetColor(150, 150, 150);
+                DrawBox(
+                    (int)left,
+                    (int)top,
+                    (int)(left + tw2),
+                    (int)(top + th2),
+                    GetColor(150, 150, 150),
+                    TRUE);
+            }
+        }
+    }
+
+    DxPlus::Vec2 hudCenter{ 100.0f, 620.0f };
+    float hudRadius = 100.0f;
+    unsigned int col = DxLib::GetColor(255, 255, 255);
+    unsigned int cols = DxLib::GetColor(50, 50, 50);
+
+
+    int kuroomu = DxPlus::Sprite::Load(L"./Data/Images/クローム.png");
+    DxPlus::Sprite::Draw(kuroomu, { hudCenter.x - 100,hudCenter.y - 100 }, { 0.16,0.16 });
+    SetDrawBlendMode(DX_BLENDMODE_ALPHA, 100);
+    // HUD の円と同じ位置・大きさで扇形を塗りつぶす（スクリーン座標を直接使う）
+    const_cast<GameContext*>(this)->SetCircleSweepDeg(static_cast<float>(360 - PlayerWalkCount * 360 / Const::MAX_PLAYER_WALK_COUNT));
+    DrawFilledSectorScreen(hudCenter, hudRadius, { 1.0f,1.0f }, 0.0f, 256, cols);
+
+    SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 }
 
-void GameContext::SpawnProjectile(const DxPlus::Vec2& pos, const DxPlus::Vec2& vel) noexcept
+bool GameContext::SpawnProjectile(const DxPlus::Vec2& pos, const DxPlus::Vec2& vel) noexcept
 {
-    if (projectiles.size() >= Const::MAX_PROJECTILES) { return; }
+    // 発射中 + 保留中の合計が上限を越えないようにする
+    size_t total = projectiles.size() + g_pendingProjectiles.size();
+    if (total >= static_cast<size_t>(Const::MAX_PROJECTILES)) {
+        return false;
+    }
     auto pr = std::make_unique<Projectile>();
+    pr->BindContext(this);
     pr->Init();
-    pr->Reset(pos, vel);
-    projectiles.push_back(std::move(pr));
+    pr->Reset(pos, vel, pr->GetSize());
 
-
+    // 直接 projectiles に追加せず、保留バッファへ格納する（Draw や他の反復中の破壊を防ぐ）
+    g_pendingProjectiles.push_back(std::move(pr));
+    return true;
 }
-
 bool GameContext::IsPositionFree(const DxPlus::Vec2& pos, float radius, const Entity2D* ignore) const noexcept
 {
+    // エンティティ同士の衝突チェック（既存）
     for (const auto& e : entities)
     {
         if (!e) continue;
@@ -334,7 +491,68 @@ bool GameContext::IsPositionFree(const DxPlus::Vec2& pos, float radius, const En
             return false;
         }
     }
+
+    // 壁（タイル由来）の衝突チェックを追加
+    for (const auto& w : Walls)
+    {
+        if (!w) continue;
+
+        // 壁は矩形（中心座標 wp と幅/高さ）として扱う
+        DxPlus::Vec2 wp = w->GetPos();
+        float halfW = w->GetWidth() * 0.5f;
+        float halfH = w->GetHeight() * 0.5f;
+
+        // 円の中心 pos に対して矩形に最も近い点を求める
+        float closestX = std::max(wp.x - halfW, std::min(pos.x, wp.x + halfW));
+        float closestY = std::max(wp.y - halfH, std::min(pos.y, wp.y + halfH));
+
+        float dx = pos.x - closestX;
+        float dy = pos.y - closestY;
+
+        if (dx * dx + dy * dy <= radius * radius)
+        {
+            return false;
+        }
+    }
+
     return true;
 }
 
+void GameContext::DrawFilledSectorScreen(
+    const DxPlus::Vec2& screenPos,
+    float radius,
+    const DxPlus::Vec2& scale,
+    float rotationRad,
+    int numSegments,
+    int color) const
+{
+    // 画面座標をそのまま使う（カメラオフセットを適用しない）
+    DxPlus::Vec2 center = screenPos;
 
+    int segs = std::max(1, numSegments > 0 ? numSegments : circleSegments);
+    std::vector<DxPlus::Vec2> verts;
+    verts.reserve(static_cast<size_t>(segs) + 2);
+    verts.push_back(center); // triangle fan の中心
+
+    float startRad = DegToRad(circleAngleDeg);
+    float sweepRad = DegToRad(circleSweepDeg);
+
+    float cosR = std::cos(rotationRad);
+    float sinR = std::sin(rotationRad);
+
+    for (int i = 0; i <= segs; ++i)
+    {
+        float t = static_cast<float>(i) / static_cast<float>(segs);
+        float ang = startRad - t * sweepRad;
+
+        float x = std::cos(ang) * radius * scale.x;
+        float y = std::sin(ang) * radius * scale.y;
+
+        float rx = x * cosR - y * sinR;
+        float ry = x * sinR + y * cosR;
+
+        verts.push_back({ center.x + rx, center.y + ry });
+    }
+
+    DxPlus::Primitive2D::DrawPolygon(verts, color, true);
+}

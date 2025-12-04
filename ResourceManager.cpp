@@ -13,6 +13,7 @@ ResourceManager& ResourceManager::GetInstance()
 
 void ResourceManager::LoadAll()
 {
+    LoadTextureAsSpriteLeftTop(ResourceKeys::Background, L"./Data/Images/2025-11-18_162755.png");
     LoadGridBottom(ResourceKeys::Player, L"./Data/Images/player.png", { 0,0 }, { 3,4 }, { 96,128 });
     LoadGridBottom(ResourceKeys::Enemy_Yankee, L"./Data/Images/yankee.png", { 0,0 }, { 3,4 }, { 96, 128 });
     LoadTextureAsSpriteLeftTop(ResourceKeys::Player_Shot, L"./Data/Images/player_shot.png");
@@ -34,8 +35,6 @@ void ResourceManager::LoadAll()
         backTypes.resize(totalTiles, Tile_None);
         if (ts) ts->types = std::move(backTypes);
     }
-
-    
 
     RegisterTileset(ResourceKeys::Tiles_Terrain, L"./Data/MapData/TerrainChip.png", 64, 64);
     {
