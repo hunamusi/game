@@ -16,4 +16,14 @@ public:
 private:
     int frameCount{ 0 };
     int fontHandle{ -1 };
+
+    enum Game
+    {
+        no = -1,
+        start,
+        option,
+        end
+    };
+
+    Game game;
 };

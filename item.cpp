@@ -7,20 +7,7 @@
 #include "ResourceManager.h"
 void Item::Init()
 {
-    ItemTipe = rand() % 2;
-    switch (ItemTipe)
-    {
-    case 0:
-    {
-        sprite = RM().GridAt(ResourceKeys::Enemy);
-        break;
-    }
-    case 1:
-    {
-        sprite = RM().GridAt(ResourceKeys::Item);
-        break;
-    }      
-    }
+    sprite = RM().GridAt(ResourceKeys::Enemy);
 	Reset();
 }
 void Item::Reset()
@@ -33,38 +20,32 @@ void Item::Reset()
    
         while (attempts < maxAttempts)
         {
-           
-                row = rand() % Map::GetRows();
-                col = rand() % Map::GetCols();
-                attempts++;
+            row = rand() % Map::GetRows();
+            col = rand() % Map::GetCols();
+            attempts++;
 
-                // 壁タイルはスキップ
-                if (Map::GetTileData(row, col) == 1) continue;
+            // 壁タイルはスキップ
+            if (Map::GetTileData(row, col) == 1) continue;
 
-                // タイル中心の座標を取得
-                DxPlus::Vec2 candidate = Map::GetTileCenterPosition(row, col);
+            // タイル中心の座標を取得
+            DxPlus::Vec2 candidate = Map::GetTileCenterPosition(row, col);
 
-                // 重なりチェック
-                if (GC().IsPositionFree(candidate, Radius(), this))
-                {
-                    position = candidate;
-                    return;
-                }
-                DxPlus::Primitive2D::DrawRect({ position }, { 20,20 }, GetColor(255, 0, 0));
-
-            
+            // 重なりチェック
+            if (GC().IsPositionFree(candidate, Radius(), this))
+            {
+                position = candidate;
+                return;
+            }
         }
+        position = Map::GetTileCenterPosition(0, 0);
 
     
 }
 
 void Item::Update()
 {
-   
-}
+    
 
-void Item::Draw()
-{
 }
 	
 

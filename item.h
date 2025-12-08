@@ -10,8 +10,5 @@ public:
     void Init();
     void Reset();
     void Update()override;
-    void Draw();
-
-    int ItemTipe = 0;
     
 };

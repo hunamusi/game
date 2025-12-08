@@ -31,7 +31,7 @@ public:
 		else if (sprite) sprite->Draw(camPos);
 		else if (graphHandle > 0) DrawGraph((int)camPos.x, (int)camPos.y, graphHandle, TRUE);
 	}
-    virtual void Draw() const
+	virtual void Draw() const
     {
         if (currentAnim) currentAnim->Draw(position);
         else if (sprite) sprite->Draw(position);
@@ -45,6 +45,11 @@ public:
 	[[nodiscard]] float Radius()const noexcept { return colliderRadius; }
 	virtual void OnHit(int/*atk*/)noexcept{}
 	[[nodiscard]] int Attack()const noexcept { return attack; }
+
+	// フレーム内で Step() による移動が既に適用されたかどうかを記録
+	void SetMovedThisFrame(bool v) noexcept { movedThisFrame = v; }
+	[[nodiscard]] bool HasMovedThisFrame() const noexcept { return movedThisFrame; }
+
 protected:
 	const DxPlus::Sprite::SpriteBase* sprite{ nullptr };
 	DxPlus::Vec2 position{};
@@ -58,11 +63,13 @@ protected:
 	bool isGrounded{ false };
 	bool alive = true;
 	float colliderRadius{ 32.0f };
-	int hp{ 3 };
-	int attack{ 1 };
+	int hp{ 20 };
+	int attack{ 10 };
 	int graphHandle;
 	DxPlus::Vec2 prevPosition;
 	
-
+	// フレーム内で既に Step() を適用したかどうか
+	bool movedThisFrame{ false };
+	
 
 };
