@@ -184,7 +184,9 @@ void GameContext::Update()
             if (!e || !e->IsAlive() || !e->IsDamageable()) continue;
             if (Collision2D::CircleVsCircle(pr->GetPosition(), pr->Radius(), e->GetPosition() + e->GetCenterOffset(), e->Radius()))
             {
-                e->OnHit(pr->Attack());
+                //bool isShotHit = e->GetShotHit();
+                e->OnHit(pr->Attack()/* & isShotHit == false*/
+                );
                 pr->RegisterHit(); // 直接 Kill() せず、Projectile 側でヒット数を管理する
                 break;
             }
