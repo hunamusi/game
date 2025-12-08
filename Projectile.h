@@ -11,7 +11,15 @@ public:
 	void SetSize(const DxPlus::Vec2& s) noexcept { size = s; }
 	const DxPlus::Vec2& GetSize() const noexcept { return size; }
 	void CameraDraw(float camX, float camY);
-
+	void RegisterHit() noexcept;
 private:
 	DxPlus::Vec2 size{ 16.0f, 16.0f };
+	int hitCount{ 0 };
+	enum ShotType
+	{
+		nomal
+		,big
+		, horizontalThree //èc3Ç¬
+		, verticallyThree //â°3Ç¬
+	};
 };

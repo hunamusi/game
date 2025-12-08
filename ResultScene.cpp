@@ -8,11 +8,11 @@ void ResultScene::Init()
 {
     DxLib::SetBackgroundColor(128, 64, 0);
 }
-
+ 
 void ResultScene::Update()
 {
-}
 
+}
 void ResultScene::Render() const
 {
     gameContext->Draw();

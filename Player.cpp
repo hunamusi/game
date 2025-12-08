@@ -9,6 +9,7 @@
 #include "GameContext.h"
 
 int PlayerWalkCount = 0;
+int PlayerWalkCountALL = 0;
 
 void Player::Init()
 {
@@ -54,7 +55,8 @@ void Player::Update()
             isMoving = true;
 
             PlayerWalkCount++;
-            PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
+            PlayerWalkCountALL++;
+         
 
         }
         else if (!left && right)
@@ -65,7 +67,7 @@ void Player::Update()
             isMoving = true;
 
             PlayerWalkCount++;
-            PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
+            PlayerWalkCountALL++;
         }
         if (up && !down)
         {
@@ -74,7 +76,7 @@ void Player::Update()
             isMoving = true;
 
             PlayerWalkCount++;
-            PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
+            PlayerWalkCountALL++;
         }
         else if (!up && down)
         {
@@ -83,8 +85,9 @@ void Player::Update()
             isMoving = true;
 
             PlayerWalkCount++;
-            PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
+            PlayerWalkCountALL++;
         }
+        PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
     }
 
 

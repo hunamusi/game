@@ -17,6 +17,7 @@ void Projectile::Reset(const DxPlus::Vec2& pos, const DxPlus::Vec2& vel, const D
 	position = pos;
 	velocity = vel;
 	size = s;
+	hitCount = 0;
 }
 
 void Projectile::Step()
@@ -26,6 +27,17 @@ void Projectile::Step()
 	if (position.x < 0 || position.x > 3500
 		|| position.y < 0 || position.y > 2500)
 	{
+		Kill();
+	}
+}
+
+
+void Projectile::RegisterHit() noexcept
+{
+	++hitCount;
+	// 魅力度が2以上なら3体ヒットするまで消さない。それ以外は1体で消える（既存動作）。
+	int requiredHits = (GC().GetAttractiveness() >= 2) ? 3 : 1;
+	if (hitCount >= requiredHits) {
 		Kill();
 	}
 }
@@ -45,24 +57,31 @@ void Projectile::CameraDraw(float camX, float camY)
 	const int right = gx + static_cast<int>(halfWf);
 	const int bottom = gy + static_cast<int>(halfHf);
 
-	int Attractiveness = GC().GetAttractiveness();
+	ShotType shotType = static_cast<ShotType>(GC().GetAttractiveness());
 
-	if (Attractiveness == 0)
+
+	switch (shotType)
 	{
+	case Projectile::nomal:
 		size = { 32.0f,32.0f };
-		
-	}
-	else if (Attractiveness == 1)
-	{
+		break;
+	case Projectile::big:
 		size = { 64.0f,64.0f };
 		camPos.x -= 20;
+		break;
+	case Projectile::horizontalThree:
+		size = { 384.0f,128.0f };
+		camPos.x -= 170;
+		break;
+	case Projectile::verticallyThree:
+		break;
+	default:
+		break;
+	}
 
-	}
-	else if (Attractiveness <= 2)
-	{
-		size = { 128.0f,128.0f };
-		camPos.x -= 50;
-	}
+
+
+
 
 	// スプライトがあれば元画像サイズからスケールを計算して描画
 	if (sprite && sprite->IsLoaded()) {
