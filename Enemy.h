@@ -20,14 +20,10 @@ public:
     [[nodiscard]] virtual bool IsDamageable()const noexcept override { return true ; }
     void OnHit(int atk)noexcept override;
     void CameraDraw(float camX, float camY) override;
-	
-	
+
 private:
 
     EnemyDirection direction{ EnemyDirection::Down };
     DxPlus::Vec2 startPosition;
 
-    int hp{ 20 };
-
-    bool isShotHit{ false };
 };

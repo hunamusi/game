@@ -64,7 +64,7 @@ protected:
 	bool alive = true;
 	float colliderRadius{ 32.0f };
 	int hp{ 20 };
-	int attack{ 10 };
+	int attack{ 0 };
 	int graphHandle;
 	DxPlus::Vec2 prevPosition;
 	

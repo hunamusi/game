@@ -1,224 +1,16 @@
-//// =============================
-//// Gameplay/Actors/Enemy.cpp
-//// =============================
-//#include "Enemy.h"
-//#include "ResourceManager.h"
-//#include "ResourceKeys.h"
-//#include "Consts.h"
-//#include "AnimationUtil.h"
-//#include "map.h"
-//#include "GameContext.h"
-//#include <cmath>
-//#include "Player.h"
-//
-//
-//void Enemy::Init()
-//{
-//    sprite = RM().GridAt(ResourceKeys::Enemy_Yankee, 1, 2);
-//
-//    AnimationUtil::BuildWalk(animLeft, 3, RM(), ResourceKeys::Enemy_Yankee, 8);
-//    AnimationUtil::BuildWalk(animRight, 1, RM(), ResourceKeys::Enemy_Yankee, 8);
-//    AnimationUtil::BuildWalk(animUp, 0, RM(), ResourceKeys::Enemy_Yankee, 8);
-//    AnimationUtil::BuildWalk(animDown, 2, RM(), ResourceKeys::Enemy_Yankee, 8);
-//
-//    currentAnim = &animDown;
-//
-//
-//}
-//
-//void Enemy::Reset()
-//{
-//    int row, col;
-//    const int maxAttempts = 30;
-//    int attempts = 0;
-//
-//    while (attempts < maxAttempts)
-//    {
-//        row = rand() % Map::GetRows();
-//        col = rand() % Map::GetCols();
-//        attempts++;
-//
-//        // •Çƒ^ƒCƒ‹‚È‚çƒXƒLƒbƒv
-//        if (Map::GetTileData(row, col) == 1) continue;
-//
-//        // ƒ^ƒCƒ‹’†SÀ•W‚ğæ“¾
-//        DxPlus::Vec2 candidate = Map::GetTileCenterPosition(row, col);
-//
-//        // ‘¼ƒIƒuƒWƒFƒNƒg‚ÆÕ“Ë‚µ‚È‚¢‚©Šm”F
-//        if (GC().IsPositionFree(candidate, Radius(), this))
-//        {
-//            position = candidate;
-//            if (currentAnim) currentAnim->Reset();
-//            startPosition = position;
-//            // ‰Šú‚ÍÃ~‚Å‚à‚æ‚¢
-//            velocity = { 0, 0 };
-//            return;
-//        }
-//    }
-//
-//    // Œ©‚Â‚©‚ç‚È‚©‚Á‚½ê‡‚ÍƒfƒtƒHƒ‹ƒgˆÊ’u
-//    position = Map::GetTileCenterPosition(0, 0);
-//    velocity = { 0, 0 };
-//    if (currentAnim) currentAnim->Reset();
-//    startPosition = position;
-//}
-//
-//void Enemy::Update()
-//{
-//    using namespace DxPlus::Input;
-//
-//    // Œ»İˆÊ’u‚ğ•Û‘¶iŒü‚«•ÏX‚ÌŠî€j
-//    DxPlus::Vec2 oldPos = position;
-//
-//    // ƒvƒŒƒCƒ„[‚ª‘¶İ‚·‚é‚©Šm”F
-//    if (auto player = GC().GetPlayer())
-//    {
-//        if (IsButtonDown(PLAYER1, BUTTON_LEFT) || IsButtonDown(PLAYER1, BUTTON_RIGHT) || IsButtonDown(PLAYER1, BUTTON_UP) || IsButtonDown(PLAYER1, BUTTON_DOWN))
-//        {
-//            Player* playerPtr = player;
-//            if (playerPtr == nullptr) return;
-//
-//            DxPlus::Vec2 playerPosition = playerPtr->GetPosition();
-//
-//            // ƒ^ƒCƒ‹”»’è—p‚Ìƒ‰ƒ€ƒ_iƒ[ƒ‹ƒhÀ•W -> ƒ^ƒCƒ‹‚ª•Ç‚©j
-//            const float tileW = Map::GetTileWidth();
-//            const float tileH = Map::GetTileHeight();
-//            auto IsTileBlocked = [&](const DxPlus::Vec2& worldPos)->bool
-//                {
-//                    int col = static_cast<int>(std::floor((worldPos.x - tileW / 2.0f) / tileW));
-//                    int row = static_cast<int>(std::floor((worldPos.y - tileH / 2.0f) / tileH));
-//                    if (row < 0 || row >= Map::GetRows() || col < 0 || col >= Map::GetCols()) return true; // ”ÍˆÍŠO‚Í’Ê‚ê‚È‚¢ˆµ‚¢
-//                    return Map::GetTileData(row, col) == 1;
-//                };
-//
-//            // ˆÚ“®ˆÓ}iˆÚ“®‚Í‚¹‚¸‚Æ‚àŒü‚­‚¾‚¯‚Å‚à”½‰f‚·‚éj
-//            bool intendedSet = false;
-//            EnemyDirection intendedDir = direction;
-//
-//            // ƒvƒŒƒCƒ„[‚Æ‚Ì·•ª
-//            float diffX = playerPosition.x - position.x;
-//            float diffY = playerPosition.y - position.y;
-//            float absX = std::fabs(diffX);
-//            float absY = std::fabs(diffY);
-//            const float EPS = 0.0001f;
-//
-//            // ƒwƒ‹ƒp[: XˆÚ“®s
-//            auto TryMoveX = [&]()
-//                {
-//                    if (std::fabs(diffX) <= EPS) return;
-//                    EnemyDirection dirX = diffX > 0.0f ? EnemyDirection::Right : EnemyDirection::Left;
-//                    // ˆÚ“®‚µ‚æ‚¤‚Æ‚µ‚½Œü‚«‚ğ‹L˜^iˆÚ“®‚Å‚«‚È‚©‚Á‚½ê‡‚àŒü‚­‚¾‚¯‚Í‚·‚éj
-//                    if (!intendedSet) { intendedDir = dirX; intendedSet = true; }
-//
-//                    float candidateX = position.x + (diffX > 0.0f ? 120.0f : -120.0f);
-//                    DxPlus::Vec2 newPosX = { candidateX, position.y };
-//
-//                    // ƒ^ƒCƒ‹‚ª•Ç‚Å‚Í‚È‚¢‚±‚ÆA‚©‚Â‘¼ƒIƒuƒWƒFƒNƒg‚ÆÕ“Ë‚µ‚È‚¢‚±‚Æ‚ğ—¼•ûŠm”F
-//                    if (!IsTileBlocked(newPosX) && GC().IsPositionFree(newPosX, Radius(), this))
-//                    {
-//                        position.x = candidateX;
-//                    }
-//                };
-//
-//            // ƒwƒ‹ƒp[: YˆÚ“®s
-//            auto TryMoveY = [&]()
-//                {
-//                    if (std::fabs(diffY) <= EPS) return;
-//                    EnemyDirection dirY = diffY > 0.0f ? EnemyDirection::Down : EnemyDirection::Up;
-//                    // ˆÚ“®‚µ‚æ‚¤‚Æ‚µ‚½Œü‚«‚ğ‹L˜^iˆÚ“®‚Å‚«‚È‚©‚Á‚½ê‡‚àŒü‚­‚¾‚¯‚Í‚·‚éj
-//                    if (!intendedSet) { intendedDir = dirY; intendedSet = true; }
-//
-//                    float candidateY = position.y + (diffY > 0.0f ? 120.0f : -120.0f);
-//                    DxPlus::Vec2 newPosY = { position.x, candidateY };
-//
-//                    // ƒ^ƒCƒ‹‚ª•Ç‚Å‚Í‚È‚¢‚±‚ÆA‚©‚Â‘¼ƒIƒuƒWƒFƒNƒg‚ÆÕ“Ë‚µ‚È‚¢‚±‚Æ‚ğ—¼•ûŠm”F
-//                    if (!IsTileBlocked(newPosY) && GC().IsPositionFree(newPosY, Radius(), this))
-//                    {
-//                        position.y = candidateY;
-//                    }
-//                };
-//
-//            // —Dæ²i‚æ‚è‘å‚«‚­“®‚­²‚ğæ‚É‚·j
-//            if (absX >= absY)
-//            {
-//                TryMoveX();
-//                TryMoveY();
-//            }
-//            else
-//            {
-//                TryMoveY();
-//                TryMoveX();
-//            }
-//
-//            // ˆÚ“®‚ğ‚İ‚½i‚Ü‚½‚Í‚İ‚½Œü‚«‚ª‚ ‚éjê‡‚ÍŒü‚«‚ğ”½‰f‚·‚é
-//            if (intendedSet)
-//            {
-//                AnimationClip* newAnim = currentAnim;
-//                switch (intendedDir)
-//                {
-//                case EnemyDirection::Down:
-//                    newAnim = &animDown;
-//                    break;
-//                case EnemyDirection::Left:
-//                    newAnim = &animLeft;
-//                    break;
-//                case EnemyDirection::Up:
-//                    newAnim = &animUp;
-//                    break;
-//                case EnemyDirection::Right:
-//                    newAnim = &animRight;
-//                    break;
-//                }
-//
-//                // ƒAƒjƒEŒü‚«‚ğØ‚è‘Ö‚¦iˆÚ“®‚Å‚«‚È‚©‚Á‚½ê‡‚Å‚àØ‚è‘Ö‚¦j
-//                if (newAnim != currentAnim)
-//                {
-//                    currentAnim = newAnim;
-//                    currentAnim->Reset();
-//                }
-//                direction = intendedDir;
-//            }
-//        }
-//
-//        const int MAX_HP = 20;
-//        float hpRatio = (MAX_HP <= 0) ? 0.0f : (static_cast<float>(hp) / static_cast<float>(MAX_HP));
-//        if (hpRatio < 0.0f) hpRatio = 0.0f;
-//        if (hpRatio > 1.0f) hpRatio = 1.0f;
-//
-//        // ƒtƒŒ[ƒ€i•j
-//        DxPlus::Primitive2D::DrawRect(position, { 5000,10000 }, GetColor(0, 0, 0));
-//        // “à•”iÔj‚ğHP”ä—¦‚Å‰¡•‚¾‚¯•Ï‚¦‚é
-//        SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
-//        // “à•”•‚Í 49 ‚ğŠî€‚É‚·‚éiŒ³‚ÌƒR[ƒh‚É‡‚í‚¹‚éj
-//        float innerHalfW = 49.0f * 0.5f * hpRatio;
-//        float innerH = 99.0f;
-//        // DrawRect ‚Í’†Sƒx[ƒX‚Å•`‚­‘z’è‚È‚Ì‚ÅA¶Šñ‚¹‚Å‚Í‚È‚­’†‰›‚©‚ç•‚ğk‚ß‚é•û®
-//        DxPlus::Primitive2D::DrawRect(position, { innerHalfW * 2.0f, innerH }, GetColor(255, 0, 0));
-//        SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
-//
-//    }
-//    if (currentAnim) currentAnim->Update();
-//
-//}
-//
-//
-//
-//
-//
-//void Enemy::OnHit(int atk) noexcept
-//{
-//    int damege = atk < 1 ? 1 : atk;
-//    hp = std::max(hp - damege, 0);
-//    if (hp <= 0) { alive = 0; }
-//}
-//
-//
-//
-//
-
-// =============================
+ï»¿// =============================
 // Gameplay/Actors/Enemy.cpp
 // =============================
+// æ¦‚è¦: è¿½è·¡/æ¥è¿‘ã‚’ä¸»ä½“ã¨ã—ãŸã‚¨ãƒãƒŸãƒ¼å®Ÿè£…ã€‚
+// è²¬å‹™:
+//  - åˆæœŸå‡ºç¾ä½ç½®ã®æ±ºå®šï¼ˆã‚¿ã‚¤ãƒ«ã‹ã‚‰ãƒ©ãƒ³ãƒ€ãƒ ã€å£/é‡ãªã‚Šå›é¿ï¼‰
+//  - ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®ä½ç½®ã‚’å‚ç…§ã—ãŸã‚·ãƒ³ãƒ—ãƒ«ãª4æ–¹å‘ç§»å‹•
+//  - ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã®å‘ãåˆ‡æ›¿ã¨é€²è¡Œ
+//  - è¢«å¼¾æ™‚ã® HP ç®¡ç†ã¨ãƒ’ãƒƒãƒˆã‚¨ãƒ•ã‚§ã‚¯ãƒˆç™ºç«ï¼ˆGameContext çµŒç”±ï¼‰
+// è¨­è¨ˆãƒ¡ãƒ¢:
+//  - ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆï¼ˆGameContextï¼‰ã¯ `BindContext` çµŒç”±ã§ã‚»ãƒƒãƒˆã•ã‚Œã‚‹å‰æã€‚æœªãƒã‚¤ãƒ³ãƒ‰ã§ã® `Update` å‘¼ã³å‡ºã—ã¯ç¦æ­¢ã€‚
+//  - å½“ãŸã‚Šåˆ¤å®šã¯å††å½¢ï¼ˆRadiusï¼‰ã§ç°¡æ˜“ã«å®Ÿè£…ã€‚å£ã¨ã®åˆ¤å®šã¯ GameContext å´ã«å§”è­²ã€‚
+//  - å…¥åŠ›ã«å¿œã˜ãŸç§»å‹•ã¯ãƒ‡ãƒãƒƒã‚°/åŒæœŸç”¨é€”ï¼ˆãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æ­©æ•°é€£å‹•ãªã©ï¼‰ã«é™å®šã—ã€è£½å“ã§ã¯ AI ã¸ç½®æ›å¯èƒ½ã€‚
 #include "Enemy.h"
 #include "ResourceManager.h"
 #include "ResourceKeys.h"
@@ -240,12 +32,11 @@ void Enemy::Init()
     AnimationUtil::BuildWalk(animDown, 2, RM(), ResourceKeys::Enemy_Yankee, 8);
 
     currentAnim = &animDown;
-
-
 }
 
 void Enemy::Reset()
 {
+    // å‡ºç¾ä½ç½®ã¯å£ã‚¿ã‚¤ãƒ«ã‚’é¿ã‘ã€ã»ã‹ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨é‡ãªã‚‰ãªã„ã‚¿ã‚¤ãƒ«ä¸­å¿ƒã¸é…ç½®
     int row, col;
     const int maxAttempts = 30;
     int attempts = 0;
@@ -256,25 +47,21 @@ void Enemy::Reset()
         col = rand() % Map::GetCols();
         attempts++;
 
-        // •Çƒ^ƒCƒ‹‚È‚çƒXƒLƒbƒv
-        if (Map::GetTileData(row, col) == 1) continue;
+        if (Map::GetTileData(row, col) == 1) continue; // å£ã¯é™¤å¤–
 
-        // ƒ^ƒCƒ‹’†SÀ•W‚ğæ“¾
         DxPlus::Vec2 candidate = Map::GetTileCenterPosition(row, col);
 
-        // ‘¼ƒIƒuƒWƒFƒNƒg‚ÆÕ“Ë‚µ‚È‚¢‚©Šm”F
         if (GC().IsPositionFree(candidate, Radius(), this))
         {
             position = candidate;
             if (currentAnim) currentAnim->Reset();
             startPosition = position;
-            // ‰Šú‚ÍÃ~‚Å‚à‚æ‚¢
             velocity = { 0, 0 };
             return;
         }
     }
 
-    // Œ©‚Â‚©‚ç‚È‚©‚Á‚½ê‡‚ÍƒfƒtƒHƒ‹ƒgˆÊ’u
+    // å¦¥å”: è¦‹ã¤ã‹ã‚‰ãªã„å ´åˆã®ãƒ•ã‚©ãƒ¼ãƒ«ãƒãƒƒã‚¯
     position = Map::GetTileCenterPosition(0, 0);
     velocity = { 0, 0 };
     if (currentAnim) currentAnim->Reset();
@@ -285,10 +72,10 @@ void Enemy::Update()
 {
     using namespace DxPlus::Input;
 
-    // Œ»İˆÊ’u‚ğ•Û‘¶iŒü‚«•ÏX‚ÌŠî€j
+    // ç¾åœ¨ä½ç½®ã‚’ä¿å­˜ï¼ˆå‘ãå¤‰æ›´ã®åŸºæº–ï¼‰
     DxPlus::Vec2 oldPos = position;
 
-    // ƒvƒŒƒCƒ„[‚ª‘¶İ‚·‚é‚©Šm”F
+    // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒå­˜åœ¨ã™ã‚‹ã‹ç¢ºèªï¼ˆã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆæœªè¨­å®šã®å®‰å…¨ç­–ã¯è£½å“ã§ã¯ assert æ¨å¥¨ï¼‰
     if (auto player = GC().GetPlayer())
     {
         if (IsButtonDown(PLAYER1, BUTTON_LEFT) || IsButtonDown(PLAYER1, BUTTON_RIGHT) || IsButtonDown(PLAYER1, BUTTON_UP) || IsButtonDown(PLAYER1, BUTTON_DOWN))
@@ -298,65 +85,61 @@ void Enemy::Update()
 
             DxPlus::Vec2 playerPosition = playerPtr->GetPosition();
 
-            // ƒ^ƒCƒ‹”»’è—p‚Ìƒ‰ƒ€ƒ_iƒ[ƒ‹ƒhÀ•W -> ƒ^ƒCƒ‹‚ª•Ç‚©j
+            // ã‚¿ã‚¤ãƒ«åˆ¤å®šç”¨ã®ãƒ©ãƒ ãƒ€ï¼ˆãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ -> ã‚¿ã‚¤ãƒ«ãŒå£ã‹ï¼‰
             const float tileW = Map::GetTileWidth();
             const float tileH = Map::GetTileHeight();
             auto IsTileBlocked = [&](const DxPlus::Vec2& worldPos)->bool
                 {
                     int col = static_cast<int>(std::floor((worldPos.x - tileW / 2.0f) / tileW));
                     int row = static_cast<int>(std::floor((worldPos.y - tileH / 2.0f) / tileH));
-                    if (row < 0 || row >= Map::GetRows() || col < 0 || col >= Map::GetCols()) return true; // ”ÍˆÍŠO‚Í’Ê‚ê‚È‚¢ˆµ‚¢
+                    if (row < 0 || row >= Map::GetRows() || col < 0 || col >= Map::GetCols()) return true; // ç¯„å›²å¤–ã¯é€šã‚Œãªã„æ‰±ã„
                     return Map::GetTileData(row, col) == 1;
                 };
 
-            // ˆÚ“®ˆÓ}iˆÚ“®‚Í‚¹‚¸‚Æ‚àŒü‚­‚¾‚¯‚Å‚à”½‰f‚·‚éj
+            // ç§»å‹•æ„å›³ï¼ˆç§»å‹•ä¸å¯ã§ã‚‚å‘ãã ã‘ã¯åæ˜ ï¼‰
             bool intendedSet = false;
             EnemyDirection intendedDir = direction;
 
-            // ƒvƒŒƒCƒ„[‚Æ‚Ì·•ª
+            // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã¨ã®å·®åˆ†
             float diffX = playerPosition.x - position.x;
             float diffY = playerPosition.y - position.y;
             float absX = std::fabs(diffX);
             float absY = std::fabs(diffY);
             const float EPS = 0.0001f;
 
-            // ƒwƒ‹ƒp[: XˆÚ“®s
+            // ãƒ˜ãƒ«ãƒ‘ãƒ¼: Xç§»å‹•è©¦è¡Œ
             auto TryMoveX = [&]()
                 {
                     if (std::fabs(diffX) <= EPS) return;
                     EnemyDirection dirX = diffX > 0.0f ? EnemyDirection::Right : EnemyDirection::Left;
-                    // ˆÚ“®‚µ‚æ‚¤‚Æ‚µ‚½Œü‚«‚ğ‹L˜^iˆÚ“®‚Å‚«‚È‚©‚Á‚½ê‡‚àŒü‚­‚¾‚¯‚Í‚·‚éj
                     if (!intendedSet) { intendedDir = dirX; intendedSet = true; }
 
                     float candidateX = position.x + (diffX > 0.0f ? 120.0f : -120.0f);
                     DxPlus::Vec2 newPosX = { candidateX, position.y };
 
-                    // ƒ^ƒCƒ‹‚ª•Ç‚Å‚Í‚È‚¢‚±‚ÆA‚©‚Â‘¼ƒIƒuƒWƒFƒNƒg‚ÆÕ“Ë‚µ‚È‚¢‚±‚Æ‚ğ—¼•ûŠm”F
                     if (!IsTileBlocked(newPosX) && GC().IsPositionFree(newPosX, Radius(), this))
                     {
                         position.x = candidateX;
                     }
                 };
 
-            // ƒwƒ‹ƒp[: YˆÚ“®s
+            // ãƒ˜ãƒ«ãƒ‘ãƒ¼: Yç§»å‹•è©¦è¡Œ
             auto TryMoveY = [&]()
                 {
                     if (std::fabs(diffY) <= EPS) return;
                     EnemyDirection dirY = diffY > 0.0f ? EnemyDirection::Down : EnemyDirection::Up;
-                    // ˆÚ“®‚µ‚æ‚¤‚Æ‚µ‚½Œü‚«‚ğ‹L˜^iˆÚ“®‚Å‚«‚È‚©‚Á‚½ê‡‚àŒü‚­‚¾‚¯‚Í‚·‚éj
                     if (!intendedSet) { intendedDir = dirY; intendedSet = true; }
 
                     float candidateY = position.y + (diffY > 0.0f ? 120.0f : -120.0f);
                     DxPlus::Vec2 newPosY = { position.x, candidateY };
 
-                    // ƒ^ƒCƒ‹‚ª•Ç‚Å‚Í‚È‚¢‚±‚ÆA‚©‚Â‘¼ƒIƒuƒWƒFƒNƒg‚ÆÕ“Ë‚µ‚È‚¢‚±‚Æ‚ğ—¼•ûŠm”F
                     if (!IsTileBlocked(newPosY) && GC().IsPositionFree(newPosY, Radius(), this))
                     {
                         position.y = candidateY;
                     }
                 };
 
-            // —Dæ²i‚æ‚è‘å‚«‚­“®‚­²‚ğæ‚É‚·j
+            // å„ªå…ˆè»¸ï¼ˆã‚ˆã‚Šå¤§ããå‹•ãè»¸ã‚’å…ˆã«è©¦ã™ï¼‰
             if (absX >= absY)
             {
                 TryMoveX();
@@ -368,27 +151,18 @@ void Enemy::Update()
                 TryMoveX();
             }
 
-            // ˆÚ“®‚ğ‚İ‚½i‚Ü‚½‚Í‚İ‚½Œü‚«‚ª‚ ‚éjê‡‚ÍŒü‚«‚ğ”½‰f‚·‚é
+            // ç§»å‹•ã‚’è©¦ã¿ãŸï¼ˆã¾ãŸã¯è©¦ã¿ãŸå‘ããŒã‚ã‚‹ï¼‰å ´åˆã¯å‘ãã‚’åæ˜ 
             if (intendedSet)
             {
                 AnimationClip* newAnim = currentAnim;
                 switch (intendedDir)
                 {
-                case EnemyDirection::Down:
-                    newAnim = &animDown;
-                    break;
-                case EnemyDirection::Left:
-                    newAnim = &animLeft;
-                    break;
-                case EnemyDirection::Up:
-                    newAnim = &animUp;
-                    break;
-                case EnemyDirection::Right:
-                    newAnim = &animRight;
-                    break;
+                case EnemyDirection::Down:  newAnim = &animDown;  break;
+                case EnemyDirection::Left:  newAnim = &animLeft;  break;
+                case EnemyDirection::Up:    newAnim = &animUp;    break;
+                case EnemyDirection::Right: newAnim = &animRight; break;
                 }
 
-                // ƒAƒjƒEŒü‚«‚ğØ‚è‘Ö‚¦iˆÚ“®‚Å‚«‚È‚©‚Á‚½ê‡‚Å‚àØ‚è‘Ö‚¦j
                 if (newAnim != currentAnim)
                 {
                     currentAnim = newAnim;
@@ -398,51 +172,48 @@ void Enemy::Update()
             }
         }
 
-        // NOTE:
-        // ƒwƒ‹ƒXƒo[•`‰æ‚ğ‚±‚±iUpdatej‚Ås‚¤‚Æuƒ[ƒ‹ƒhÀ•W‚Ì‚Ü‚ÜƒXƒNƒŠ[ƒ“‚É•`‰æv‚µ‚Ä‚µ‚Ü‚¢A
-        // ƒJƒƒ‰‚ÌˆÊ’u‚â•`‰æ‡‚É‚æ‚Á‚Ä‘¼ƒIƒuƒWƒFƒNƒg‚É”í‚³‚ê‚½‚è‹‘å‚È‹éŒ`‚ª‰æ–Ê‘S‘Ì‚ğ•¢‚¤Œ´ˆö‚É‚È‚è‚Ü‚·B
-        // •`‰æ‚Í CameraDraw ‚Ås‚¤‚æ‚¤‚É•ÏX‚µ‚Ü‚µ‚½iCameraDraw ‚ÍƒJƒƒ‰•â³Ï‚ÌƒXƒNƒŠ[ƒ“À•W‚Å•`‰æ‚³‚ê‚Ü‚·jB
+        // NOTE: ãƒ˜ãƒ«ã‚¹ãƒãƒ¼æç”»ã¯ CameraDraw ã§å®Ÿæ–½ï¼ˆã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™åŒ–æ¸ˆï¼‰
     }
 
     if (currentAnim) currentAnim->Update();
-
-
 }
 
-// CameraDraw ‚ğƒI[ƒo[ƒ‰ƒCƒh‚µ‚ÄAƒXƒvƒ‰ƒCƒg‚Ì•`‰æŒã‚ÉƒJƒƒ‰•â³Ï‚İ‚ÌÀ•W‚ÅHPƒo[‚ğ•`‰æ‚·‚é
 void Enemy::CameraDraw(float camX, float camY)
 {
-    // ƒXƒvƒ‰ƒCƒg / ƒAƒjƒ‚ğ•`‰æiŠî’êÀ‘•‚ğ—˜—pj
+    // ã‚¹ãƒ—ãƒ©ã‚¤ãƒˆ / ã‚¢ãƒ‹ãƒ¡ã‚’æç”»ï¼ˆåŸºåº•å®Ÿè£…ã‚’åˆ©ç”¨ï¼‰
     Entity2D::CameraDraw(camX, camY);
 
-    // HPƒo[‚ğƒXƒNƒŠ[ƒ“À•W‚Å•`‰æ
+    // HPãƒãƒ¼ã‚’ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™ã§æç”»
     const int MAX_HP = 20;
     float hpRatio = (MAX_HP <= 0) ? 0.0f : (static_cast<float>(hp) / static_cast<float>(MAX_HP));
     if (hpRatio < 0.0f) hpRatio = 0.0f;
     if (hpRatio > 1.0f) hpRatio = 1.0f;
 
-    // ƒ[ƒ‹ƒh -> ƒXƒNƒŠ[ƒ“
     DxPlus::Vec2 screenPos = position - DxPlus::Vec2{ camX, camY };
 
-    // ƒTƒCƒYEˆÊ’u’²®i•K—v‚É‰‚¶‚Ä”÷’²®‚µ‚Ä‚­‚¾‚³‚¢j
     const float frameW = 80.0f;
-    const float frameH = 12.0f;
+    const float frameH = 8.0f;
     float left = screenPos.x - frameW * 0.5f;
-    float top = screenPos.y;
+    float top = screenPos.y -120.0f;
 
-    // ƒtƒŒ[ƒ€i•j
-    DxPlus::Primitive2D::DrawRect({ left, top }, { frameW, frameH }, GetColor(0, 0, 0));
-    // “à•”iÔj
     SetDrawBlendMode(DX_BLENDMODE_ALPHA, 255);
     float innerW = (frameW - 2.0f) * hpRatio;
     if (innerW < 0.0f) innerW = 0.0f;
-    DxPlus::Primitive2D::DrawRect({ left + 1.0f, top + 1.0f }, { innerW, frameH - 2.0f }, GetColor(255, 0, 0));
+    DxPlus::Primitive2D::DrawRect({ left + 1.0f, top + 1.0f }, { innerW, frameH - 2.0f }, GetColor(0, 255, 0));
     SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 }
 
 void Enemy::OnHit(int atk) noexcept
 {
     int damege = atk < 1 ? 1 : atk;
+    int prevHp = hp;
     hp = std::max(hp - damege, 0);
+
+    // HP ãŒæ¸›å°‘ã—ãŸã‚¿ã‚¤ãƒŸãƒ³ã‚°ã§ã‚¨ãƒ•ã‚§ã‚¯ãƒˆå†ç”Ÿ
+    if (hp < prevHp)
+    {
+        if (gc) gc->SpawnEnemyHitEffect(position);
+    }
+
     if (hp <= 0) { alive = 0; }
 }

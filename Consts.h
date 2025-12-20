@@ -18,6 +18,7 @@ namespace Const
     // ===== ìGä÷òA =====
     constexpr float ENEMY_SPEED = 4.0f;
     constexpr float MOVE_DISTANCE = 100.0f;
+    constexpr float ENEMY_MAX = 10;
 
     // ===== ÉQÅ[ÉÄì‡ã§í  =====
 

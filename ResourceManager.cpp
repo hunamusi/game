@@ -14,15 +14,27 @@ ResourceManager& ResourceManager::GetInstance()
 void ResourceManager::LoadAll()
 {
     LoadTextureAsSpriteLeftTop(ResourceKeys::Background, L"./Data/Images/2025-11-18_162755.png");
-    LoadGridBottom(ResourceKeys::Player, L"./Data/Images/player.png", { 0,0 }, { 3,4 }, { 96,128 });
+    //LoadGridBottom(ResourceKeys::Player, L"./Data/Images/player.png", { 0,0 }, { 3,4 }, { 96,128 });
     LoadGridBottom(ResourceKeys::Enemy_Yankee, L"./Data/Images/yankee.png", { 0,0 }, { 3,4 }, { 96, 128 });
     LoadTextureAsSpriteLeftTop(ResourceKeys::Player_Shot, L"./Data/Images/player_shot.png");
     LoadFont(ResourceKeys::Font_Title, L"./Data/Fonts/Bitcount/static/Bitcount-Light.ttf");
     LoadTextureAsSpriteLeftTop(ResourceKeys::Tiles_City, L"./Data/Images/ground1.png");
+    LoadTextureAsSpriteLeftTop(ResourceKeys::Tiles_City_2, L"./Data/Images/ground2.png");
     LoadTextureAsSpriteLeftTop(ResourceKeys::Building_big, L"./Data/Images/building_big.png");
     LoadTextureAsSpriteLeftTop(ResourceKeys::Building_small, L"./Data/Images//building_small.png");
     RegisterTileset(ResourceKeys::Tiles_Background, L"./Data/MapData/BackChip.png", 64, 64);
     LoadTextureAsSpriteCenter(ResourceKeys::Enemy, L"./Data/Images/slime.png");
+
+
+    LoadTextureAsSpriteCenter(ResourceKeys::treasureItem, L"./Data/Images/robot.png");
+    LoadTextureAsSpriteCenter(ResourceKeys::UI, L"./Data/Images/ui_main.png");
+    LoadTextureAsSpriteCenter(ResourceKeys::MapnameUI, L"./Data/Images/downtown.png");
+    LoadTextureAsSpriteCenter(ResourceKeys::turnUI, L"./Data/Images/remaning_turn.png");
+    
+    LoadGridBottom(ResourceKeys::AttackEffect1, L"./Data/Images/effect1.png", { 0,0 }, { 10,1 }, { 108,104 });
+    LoadGridBottom(ResourceKeys::AttackEffect2, L"./Data/Images/effect2.png", { 0,0 }, { 10,1 }, { 108,104 });
+
+    LoadGridBottom(ResourceKeys::Player, L"./Data/Images/player.png", { 0,0 }, { 4,4 }, { 84,160 });
 
     {
         std::vector<int8_t> backTypes
