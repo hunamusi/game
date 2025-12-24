@@ -12,10 +12,20 @@
 #include <cmath>
 #include "Item.h"
 #include "Player.h"
+#include "AttackEffectEnemy.h"
 
 // ゲーム全体で共有する"文脈（コンテキスト）"。
 // プレイヤー・敵・マップ・アイテムなどを束ね、
 // シーン（Title / Game / Result）から参照できるようにする。
+
+enum class TreasureType
+{
+    Ishab,// 装備
+    Sword,
+    Shield,
+    AttractUp,      // 魅力度アップ
+    AttractDown     // 魅力度ダウン
+};
 class GameContext
 {
 public:
@@ -33,6 +43,9 @@ public:
     bool SpawnProjectile(const DxPlus::Vec2& pos, const DxPlus::Vec2& vel) noexcept;
     bool IsPositionFree(const DxPlus::Vec2& pos, float radius, const Entity2D* ignore) const noexcept;
     Player* GetPlayer() const noexcept { return player; }
+
+    // Spawn an enemy hit effect that will play independently
+    void SpawnEnemyHitEffect(const DxPlus::Vec2& worldPos) noexcept;
 
     // --- 追加 public API ---
     void SetCircleAngleDeg(float deg) noexcept { circleAngleDeg = deg; }
@@ -55,6 +68,9 @@ public:
 
     int GetAttractiveness() const noexcept { return Attractiveness; }
 
+    // 追加: プレイヤーの正面1マスにいる敵を攻撃する（Player から呼ぶ）
+    void AttackFront(const Player* attacker, const DxPlus::Vec2& dir) noexcept;
+
 
 private:
     const DxPlus::Sprite::SpriteBase* backgroundSpr{ nullptr };
@@ -65,9 +81,27 @@ private:
     std::vector<std::unique_ptr<Projectile>> projectiles;
     std::vector<std::unique_ptr<Wall>> Walls;
     std::vector<std::unique_ptr<Item>> Items;
+    // Enemy hit effects
+    std::vector<std::unique_ptr<AttackEffectEnemy>> effects;
 
     float circleAngleDeg{ 270.0f };    // 開始角度（度）
     float circleSweepDeg{ 360.0f };   // 掃引角（度）
     int circleSegments{ 1000 };        // 円弧を近似する分割数
-    int Attractiveness = 0; //魅力度
+    int Attractiveness = 10; //魅力度
+    int EnemyCount = 0;
+    int i = 0;
+    bool ItemGet{ false };
+    int ItemGetTimer = 0;
+    enum AttackType
+    {
+        frontSquare1,//正面1マス
+        flontSquere2,//正面2マス
+        flontWide3,//正面左右3マス
+        flontWide6,//正面左右6マス
+        backAndForthAndAround,//前後左右1マスづつ
+    };
+    AttackType attackType;
+
+    std::wstring debugHudText;
+
 };

@@ -13,6 +13,8 @@ namespace ResourceKeys
     inline constexpr const wchar_t* AttackEffect1 = L"AttackEffect1";
     inline constexpr const wchar_t* AttackEffect2 = L"AttackEffect2";
 
+    inline constexpr const wchar_t* Numbers = L"Numbers";
+
     // ===== UI ====
     inline constexpr const wchar_t* UI = L"UI";
     inline constexpr const wchar_t* MapnameUI = L"MapnameUI";

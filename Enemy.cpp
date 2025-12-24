@@ -26,10 +26,10 @@ void Enemy::Init()
 {
     sprite = RM().GridAt(ResourceKeys::Enemy_Yankee, 1, 2);
 
-    AnimationUtil::BuildWalk(animLeft, 3, RM(), ResourceKeys::Enemy_Yankee, 8);
-    AnimationUtil::BuildWalk(animRight, 1, RM(), ResourceKeys::Enemy_Yankee, 8);
-    AnimationUtil::BuildWalk(animUp, 0, RM(), ResourceKeys::Enemy_Yankee, 8);
-    AnimationUtil::BuildWalk(animDown, 2, RM(), ResourceKeys::Enemy_Yankee, 8);
+    AnimationUtil::BuildWalk(animLeft, 2, RM(), ResourceKeys::Enemy_Yankee, 8);
+    AnimationUtil::BuildWalk(animRight, 3, RM(), ResourceKeys::Enemy_Yankee, 8);
+    AnimationUtil::BuildWalk(animUp, 1, RM(), ResourceKeys::Enemy_Yankee, 8);
+    AnimationUtil::BuildWalk(animDown, 0, RM(), ResourceKeys::Enemy_Yankee, 8);
 
     currentAnim = &animDown;
 }
