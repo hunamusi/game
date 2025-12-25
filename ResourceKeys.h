@@ -15,6 +15,11 @@ namespace ResourceKeys
 
     inline constexpr const wchar_t* Numbers = L"Numbers";
 
+    inline constexpr const wchar_t* AoE1 = L"AoE1";
+    inline constexpr const wchar_t* AoE2 = L"AoE2";
+    inline constexpr const wchar_t* AoE3 = L"AoE3";
+    inline constexpr const wchar_t* AoE4 = L"AoE4";
+    inline constexpr const wchar_t* AoE5 = L"AoE5";
     // ===== UI ====
     inline constexpr const wchar_t* UI = L"UI";
     inline constexpr const wchar_t* MapnameUI = L"MapnameUI";

@@ -423,7 +423,11 @@ void GameContext::Draw() const
     const DxPlus::Sprite::SpriteBase* Shot = RM().GridAt(ResourceKeys::Item);
     const DxPlus::Sprite::SpriteBase* BuildingSprite = RM().GridAt(ResourceKeys::Building_big);
     const DxPlus::Sprite::SpriteBase* BuildingSprite_small = RM().GridAt(ResourceKeys::Building_small);
-
+    const DxPlus::Sprite::SpriteBase* AoE1 = RM().GridAt(ResourceKeys::AoE1);
+    const DxPlus::Sprite::SpriteBase* AoE2 = RM().GridAt(ResourceKeys::AoE2);
+    const DxPlus::Sprite::SpriteBase* AoE3 = RM().GridAt(ResourceKeys::AoE3);
+    const DxPlus::Sprite::SpriteBase* AoE4 = RM().GridAt(ResourceKeys::AoE4);
+    const DxPlus::Sprite::SpriteBase* AoE5 = RM().GridAt(ResourceKeys::AoE5);
 
     // 画面サイズ（DxPlus 定義を使用）
     int screenW = DxPlus::CLIENT_WIDTH;
@@ -782,6 +786,27 @@ void GameContext::Draw() const
             -1);
         SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
     }
+
+    switch (attackType)
+    {
+    case GameContext::frontSquare1:
+        AoE1->Draw({ 0,500 });
+        break;
+    case GameContext::flontSquere2:
+        AoE2->Draw({ 0,500 });
+        break;
+    case GameContext::flontWide3:
+        AoE3->Draw({ 0,500 });
+        break;
+    case GameContext::flontWide6:
+        AoE4->Draw({ 0,500 });
+        break;
+    case GameContext::backAndForthAndAround:
+        AoE5->Draw({ 0,500 });
+        break;
+    }
+
+
 }
 
 bool GameContext::SpawnProjectile(const DxPlus::Vec2& pos, const DxPlus::Vec2& vel) noexcept
