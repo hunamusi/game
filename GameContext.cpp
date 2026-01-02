@@ -29,6 +29,9 @@
 #include "item.h"
 #include <cmath>
 
+// プレイヤーの最終座標を保持（シーン間での復帰用）。(0,0)は未保存扱い
+static DxPlus::Vec2 g_lastPlayerPos{ 0.0f, 0.0f };
+
 
 int a = 0;
 int j = 0;
@@ -75,26 +78,51 @@ void GameContext::Init()
 
     backgroundSpr = RM().GridAt(ResourceKeys::Background);
 
-    // エンティティ初期化（プレイヤー + 必要なら敵プール）
-    entities.clear();
-    entities.emplace_back(std::make_unique<Player>());
-    player = static_cast<Player*>(entities.back().get());
+    // プレイヤーが未作成なら作る。既存なら座標維持のため再生成しない
+    if (player == nullptr)
+    {
+        entities.emplace_back(std::make_unique<Player>());
+        player = static_cast<Player*>(entities.back().get());
+        player->BindContext(this);
+        player->Init();
+        // 保存済み座標があれば復元（0,0は未保存扱い）。未保存なら初期位置を(540,420)に設定
+        if (!(g_lastPlayerPos.x == 0.0f && g_lastPlayerPos.y == 0.0f))
+        {
+            player->SetPosition(g_lastPlayerPos);
+        }
+        else
+        {
+            player->SetPosition({540.0f, 420.0f});
+        }
+    }
+    else
+    {
+        // 既存プレイヤーは再Initしない（Menu復帰時の位置保持のため）
+        player->BindContext(this);
+    }
 
+    // 他エンティティ（必要なら）
     for (size_t i = 0; i < 0; ++i)
     {
-        entities.push_back(std::make_unique<Enemy>());
+        auto enemy = std::make_unique<Enemy>();
+        enemy->BindContext(this);
+        enemy->Init();
+        entities.push_back(std::move(enemy));
     }
 
     projectiles.clear();
     projectiles.reserve(8);
 
-    // 重要: コンテキストを全エンティティへ注入し、初期化を一度だけ行う
+    // 重要: コンテキスト注入（既存エンティティにも）
     for (auto& e : entities)
     {
         e->BindContext(this);
-        e->Init();
+        if (dynamic_cast<Player*>(e.get()) == nullptr)
+        {
+            e->Init();
+        }
     }
-    if (player) player->Init();
+
     camera.SetTarget(player);
 
     // アイテム生成
@@ -107,7 +135,7 @@ void GameContext::Init()
         Items.push_back(std::move(item));
     }
 
-    // AttackEffectEnemy のプール初期化（軽量な一時オブジェクト）
+    // AttackEffectEnemy のプール初期化
     effects.clear();
     effects.reserve(16);
     for (int i = 0; i < 8; ++i)
@@ -122,12 +150,32 @@ void GameContext::Init()
 void GameContext::Reset()
 {
     // ステージ再開用の軽量リセット（プレイヤー/弾/エフェクト中心）
-    player->Reset();
+    if (player) player->Reset();
+
+    // 非プレイヤー（敵など）を全削除して新規プレイに備える
+    entities.erase(
+        std::remove_if(entities.begin(), entities.end(),
+            [this](const std::unique_ptr<Entity2D>& e) { return e.get() != player; }),
+        entities.end());
+
     projectiles.clear();
     g_pendingProjectiles.clear();
 
     // Reset effects（プールをそのまま再利用）
     for (auto& ef : effects) ef->Reset();
+
+    // スポーンカウンタは必ず初期化
+    EnemyCount = 0;
+
+    // 開始時に最低限の敵を出しておく（例: 3体）
+    for (int n = 0; n < 3; ++n)
+    {
+        auto enemy = std::make_unique<Enemy>();
+        enemy->BindContext(this);
+        enemy->Init();
+        enemy->Reset();
+        entities.push_back(std::move(enemy));
+    }
 }
 
 void GameContext::Update()
@@ -138,6 +186,9 @@ void GameContext::Update()
         return;
     }
 
+    // 最終座標を更新（毎フレーム保存）
+    g_lastPlayerPos = player->GetPosition();
+
     // フレーム開始時の全エンティティの位置を保存（移動キャンセル用）
     std::vector<DxPlus::Vec2> prevPositions;
     prevPositions.reserve(entities.size());
@@ -146,10 +197,14 @@ void GameContext::Update()
     camera.Update();
 
 
-    // エネミーを数歩ごとに生成
-    int WalkCount = PlayerWalkCount; // 注意: ローカルの 0 代入ではグローバルは変化しない
-
-    if (EnemyCount < 10 && WalkCount < 10)
+    // エネミーを歩数に応じて生成（生存数を基準に上限管理）
+    int aliveEnemies = 0;
+    for (auto& e : entities)
+    {
+        if (e.get() != player && e->IsAlive() && dynamic_cast<Enemy*>(e.get()) != nullptr) ++aliveEnemies;
+    }
+    // 一定歩数到達で1体スポーンし、歩数をリセット
+    if (aliveEnemies < 10 && PlayerWalkCount >= 10)
     {
         auto enemy = std::make_unique<Enemy>();
         enemy->BindContext(this);
@@ -157,8 +212,7 @@ void GameContext::Update()
         enemy->Reset(); // 新規敵のみ
         entities.push_back(std::move(enemy));
 
-        EnemyCount++;
-        WalkCount = 0; // グローバルの歩数は変わらない点に注意
+        PlayerWalkCount = 0; // グローバル歩数をリセット
     }
 
     // エンティティの更新/移動反映
@@ -206,10 +260,10 @@ void GameContext::Update()
     }
 
     // 削除: 再生完了したエフェクトをクリア
-    effects.erase(std::remove_if(effects.begin(), effects.end(), [](const std::unique_ptr<AttackEffectEnemy>& e){ return !e->IsAlive(); }), effects.end());
+    effects.erase(std::remove_if(effects.begin(), effects.end(), [](const std::unique_ptr<AttackEffectEnemy>& e) { return !e->IsAlive(); }), effects.end());
 
     // 壁との簡易衝突解決（既存ロジック維持）
-    DxPlus::Vec2 prev = player->GetPrevPosition();
+    prev = player->GetPrevPosition();
     DxPlus::Vec2& p = player->Position();
     float pw = 120.0f, ph = 120.0f;
     const float Y_COLLISION_OFFSET = 0.0f;
@@ -269,32 +323,27 @@ void GameContext::Update()
         }
     }
 
-    //プレイヤー正面1マスにいる敵を攻撃する（射撃ボタンかつ歩数満タンのとき）
     using namespace DxPlus::Input;
     int inputButton = GetButtonDown(PLAYER1);
     bool attack = (inputButton & BUTTON_TRIGGER2) != 0;
     if (attack && PlayerWalkCount == Const::MAX_PLAYER_WALK_COUNT)
     {
-        // プレイヤーの向きは直近の移動（prevPos -> pos）から推定、移動がない場合は下向きデフォルト
-        DxPlus::Vec2 prevPos = player->GetPrevPosition();
-        DxPlus::Vec2 delta = pos - prevPos;
-        const float EPS = 0.0001f;
-        DxPlus::Vec2 dir{ 0.0f, 1.0f }; // デフォルト下
-        if (std::fabs(delta.x) > EPS || std::fabs(delta.y) > EPS)
-        {
-            dir = delta.Normalize();
-        }
+        // タイル座標の算出は既存のまま
+        float tw = Map::GetTileWidth();
+        float th = Map::GetTileHeight();
+        DxPlus::Vec2 pos = player->Position();
+        int col = static_cast<int>(std::floor((pos.x - tw / 2.0f) / tw));
+        int row = static_cast<int>(std::floor((pos.y - th / 2.0f) / th));
 
-        // 方向を4方向に丸める（左右優先）
+        // プレイヤー画像（アニメーション）から向きを推定
         int dx = 0, dy = 0;
-        if (std::fabs(dir.x) > std::fabs(dir.y))
-        {
-            dx = dir.x > 0 ? 1 : -1;
-        }
-        else
-        {
-            dy = dir.y > 0 ? 1 : -1;
-        }
+        AnimationClip* cur = player->GetCurrentAnim();
+        if (cur == &player->GetAnimLeft()) { dx = -1; dy = 0; }
+        else if (cur == &player->GetAnimRight()) { dx = 1; dy = 0; }
+        else if (cur == &player->GetAnimUp()) { dx = 0; dy = -1; }
+        else if (cur == &player->GetAnimDown()) { dx = 0; dy = 1; }
+        else { dx = 0; dy = 1; }
+
 
         int targetCol = col + dx;
         int targetRow = row + dy;
@@ -308,13 +357,14 @@ void GameContext::Update()
                 int eRow = static_cast<int>(std::floor((ePos.y - th / 2.0f) / th));
                 if (eCol == targetCol && eRow == targetRow)
                 {
-                    // プレイヤーの攻撃力 + 魅力度を渡す
                     e->OnHit(player->Attack() + Attractiveness);
                     break; // 正面1マスの最初の敵だけ攻撃
                 }
             }
         }
     }
+
+    
     
     bool plus = (inputButton & BUTTON_1) != 0;
     bool minus = (inputButton & BUTTON_2) != 0;
@@ -389,6 +439,16 @@ void GameContext::Update()
         + std::to_wstring(static_cast<int>(attackType));
 
     debugHudText = std::move(text);
+
+    if (PlayerWalkCountALL >= Const::TURN_MAX)
+    {
+        for (auto& e : entities)
+        {
+            if (!e) continue;
+            if (e.get() == player) continue; // プレイヤーは殺さない（ダングリング回避）
+            e->Kill();
+        }
+    }
 }
 
 namespace {
@@ -669,7 +729,7 @@ void GameContext::Draw() const
     const float miniX = 1050.0f, miniY = 150.0f;
     for (int row = 0; row < Map::GetRows(); ++row)
     {
-        for (int col = 0; col < Map::GetCols(); ++col)
+        for (int col = 0; col <= Map::GetCols()-1; ++col)
         {
             DxPlus::Vec2 c = Map::GetTileCenterPosition(row, col);
             float MinX = c.x * miniScale + miniX;

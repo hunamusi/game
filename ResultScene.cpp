@@ -4,6 +4,9 @@
 #include "ResultScene.h"
 #include "SceneManager.h"
 
+
+
+
 void ResultScene::Init()
 {
     DxLib::SetBackgroundColor(128, 64, 0);
@@ -11,11 +14,16 @@ void ResultScene::Init()
  
 void ResultScene::Update()
 {
-
+    // Enter（Return）でタイトルへ戻り、起動時の数値へリセット
+    if (DxLib::CheckHitKey(KEY_INPUT_RETURN))
+    {
+        // シーン切り替え（タイトルへ）
+        Scene* gameScene = SceneManager::GetInstance().GetScene(SceneID::Title);
+        SetNextScene(gameScene);
+    }
 }
 void ResultScene::Render() const
 {
-    gameContext->Draw();
 
     const int white = DxLib::GetColor(255, 255, 255);
     DxPlus::Text::DrawString(L"Result",

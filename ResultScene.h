@@ -14,4 +14,5 @@ public:
 
 private:
     int fontHandle{ -1 };
+
 };

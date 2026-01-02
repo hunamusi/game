@@ -7,8 +7,14 @@
 #include "TitleScene.h"
 #include "GameScene.h"
 #include "ResultScene.h"
+#include "MenuScene.h"
 
-enum class SceneID { Title, Game, Result };
+enum class SceneID { 
+    Title
+    , Game
+    , Result 
+    , Menu
+};
 
 class SceneManager
 {
@@ -39,6 +45,7 @@ private:
     TitleScene  titleScene{ &gameContext };
     GameScene   gameScene{ &gameContext };
     ResultScene resultScene{ &gameContext };
+    MenuScene menuScene{ &gameContext };
 
     Scene* scene = nullptr; // åªç›ÇÃÉVÅ[Éì
 };

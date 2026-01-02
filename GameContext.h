@@ -66,11 +66,19 @@ public:
         int numSegments = 128,
         int color = DxLib::GetColor(255, 255, 255)) const;
 
-    int GetAttractiveness() const noexcept { return Attractiveness; }
-
     // 追加: プレイヤーの正面1マスにいる敵を攻撃する（Player から呼ぶ）
     void AttackFront(const Player* attacker, const DxPlus::Vec2& dir) noexcept;
 
+    void SetAttractiveness(int value) noexcept { Attractiveness = value; }
+    int GetAttractiveness() const noexcept { return Attractiveness; }
+
+    // 追加: attackType を初期化/設定する API
+    void SetAttackType(int v) noexcept {
+        // enum 範囲にクランプして安全に設定
+        int clamped = std::clamp(v, 0, 4);
+        attackType = static_cast<AttackType>(clamped);
+    }
+    int GetAttackType() const noexcept { return static_cast<int>(attackType); }
 
 private:
     const DxPlus::Sprite::SpriteBase* backgroundSpr{ nullptr };
@@ -101,6 +109,9 @@ private:
         backAndForthAndAround,//前後左右1マスづつ
     };
     AttackType attackType;
+
+    // MenuSceneから戻ってきたかを判断するための前フレーム位置（0,0以外なら再Initしない）
+    DxPlus::Vec2 prev{ 0.0f, 0.0f };
 
     std::wstring debugHudText;
 

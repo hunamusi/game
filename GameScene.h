@@ -14,4 +14,5 @@ public:
     void Render() const override;
 
 private:
+    bool initialized = false;
 };

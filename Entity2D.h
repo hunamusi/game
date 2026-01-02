@@ -50,6 +50,12 @@ public:
 	void SetMovedThisFrame(bool v) noexcept { movedThisFrame = v; }
 	[[nodiscard]] bool HasMovedThisFrame() const noexcept { return movedThisFrame; }
 
+	[[nodiscard]] AnimationClip* GetCurrentAnim() const noexcept { return currentAnim; }
+	[[nodiscard]] const AnimationClip& GetAnimLeft()  const noexcept { return animLeft; }
+	[[nodiscard]] const AnimationClip& GetAnimRight() const noexcept { return animRight; }
+	[[nodiscard]] const AnimationClip& GetAnimUp()    const noexcept { return animUp; }
+	[[nodiscard]] const AnimationClip& GetAnimDown()  const noexcept { return animDown; }
+
 protected:
 	const DxPlus::Sprite::SpriteBase* sprite{ nullptr };
 	DxPlus::Vec2 position{};

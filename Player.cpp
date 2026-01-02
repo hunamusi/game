@@ -52,18 +52,58 @@ void Player::Update()
     prevPos = position;
     using namespace DxPlus::Input;
 
-    int button = GetButtonDown(PLAYER1);
-    bool left = (button & BUTTON_LEFT) != 0;
-    bool right = (button & BUTTON_RIGHT) != 0;
-    bool up = (button & BUTTON_UP) != 0;
-    bool down = (button & BUTTON_DOWN) != 0;
+    int buttonDown = GetButtonDown(PLAYER1);
+    int button = GetButton(PLAYER1);
+    bool left = (buttonDown & BUTTON_LEFT) != 0;
+    bool right = (buttonDown & BUTTON_RIGHT) != 0;
+    bool up = (buttonDown & BUTTON_UP) != 0;
+    bool down = (buttonDown & BUTTON_DOWN) != 0;
+    bool shift = (button & BUTTON_TRIGGER4) != 0;
 
     AnimationClip* nextAnim{ nullptr };
     bool isMoving{ false };
     float vx{}, vy{};
 
 
-    if (PlayerCount >= 0)
+    if (PlayerCount >= 0 && shift)
+    {
+        if (left && !right)
+        {
+            nextAnim = &animLeft;
+            isMoving = true;
+
+            PlayerWalkCount++;
+            PlayerWalkCountALL++;
+
+
+        }
+        else if (!left && right)
+        {
+            nextAnim = &animRight;
+            isMoving = true;
+
+            PlayerWalkCount++;
+            PlayerWalkCountALL++;
+        }
+        if (up && !down)
+        {
+            nextAnim = &animUp;
+            isMoving = true;
+
+            PlayerWalkCount++;
+            PlayerWalkCountALL++;
+        }
+        else if (!up && down)
+        {
+            nextAnim = &animDown;
+            isMoving = true;
+
+            PlayerWalkCount++;
+            PlayerWalkCountALL++;
+        }
+        PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
+    }
+    else if (PlayerCount >= 0)
     {
         if (left && !right)
         {
@@ -120,8 +160,8 @@ void Player::Update()
     }
 
     if (isMoving && currentAnim) currentAnim->Update();
-    int buttonDown = GetButtonDown(PLAYER1);
-    bool shoot = (buttonDown & BUTTON_TRIGGER2) != 0;
+    int buttonDowns = GetButtonDown(PLAYER1);
+    bool shoot = (buttonDowns & BUTTON_TRIGGER2) != 0;
 
     if (shoot && PlayerWalkCount == Const::MAX_PLAYER_WALK_COUNT)
     {

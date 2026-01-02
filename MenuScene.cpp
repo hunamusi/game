@@ -1,92 +1,67 @@
-// =============================
-// Scenes/Title/TitleScene.cpp
-// =============================
-#include "TitleScene.h"
-#include "ResourceManager.h"
+#include "MenuScene.h"
 #include "SceneManager.h"
-#include "ResourceKeys.h"
-#include "DxLib.h"
-#include "GameContext.h"
 
-extern int PlayerWalkCount;
-extern int PlayerWalkCountALL;
-
-void TitleScene::Init()
+void MenuScene::Init()
 {
-    DxLib::SetBackgroundColor(16, 128, 224);
-    frameCount = 0;
-    game = start;
-    fontHandle = RM().GetFont(ResourceKeys::Font_Title);
-    // 起動時と同じ数値に戻すため、Attractiveness を初期化
-
-    gameContext->SetAttractiveness(10);
-    gameContext->SetAttackType(0);
-    
 }
 
-void TitleScene::Update()
+void MenuScene::Update()
 {
     using namespace DxPlus::Input;
 
     // コントローラ／キーボードの押下瞬間を取得
-    int btnDown = GetButtonDown(PLAYER1);
+    int btnDownM = GetButtonDown(PLAYER1);
 
     // START でゲーム開始（現在選択が start のとき）
-    if ((btnDown & BUTTON_START) != 0 && game == start)
+    if ((btnDownM & BUTTON_START) != 0 && menu == start)
     {
-        // 文脈を初期化して新規プレイに備える
-        gameContext->Reset();
-
-        PlayerWalkCount = 0;
-        PlayerWalkCountALL = 0;
-
-
         Scene* gameScene = SceneManager::GetInstance().GetScene(SceneID::Game);
         SetNextScene(gameScene);
         return;
     }
 
-    if ((btnDown & BUTTON_START) != 0 && game == end)
+    if ((btnDownM & BUTTON_START) != 0 && menu == end)
     {
         SM().Shutdown();
         return;
     }
 
     // 上 (W) 押下で選択を上へ（enum の値を -1）
-    if ((btnDown & BUTTON_UP) != 0)
+    if ((btnDownM & BUTTON_UP) != 0)
     {
-        int v = static_cast<int>(game) - 1;
-        if (v < static_cast<int>(Game::start)) v = static_cast<int>(Game::start);
-        game = static_cast<Game>(v);
+        int v = static_cast<int>(menu) - 1;
+        if (v < static_cast<int>(Menu::start)) v = static_cast<int>(Menu::start);
+        menu = static_cast<Menu>(v);
     }
 
     // 下 (S) 押下で選択を下へ（enum の値を +1）
-    if ((btnDown & BUTTON_DOWN) != 0)
+    if ((btnDownM & BUTTON_DOWN) != 0)
     {
-        int v = static_cast<int>(game) + 1;
-        if (v > static_cast<int>(Game::end)) v = static_cast<int>(Game::end);
-        game = static_cast<Game>(v);
+        int v = static_cast<int>(menu) + 1;
+        if (v > static_cast<int>(Menu::end)) v = static_cast<int>(Menu::end);
+        menu = static_cast<Menu>(v);
     }
 
     frameCount++;
 }
-
-void TitleScene::Render() const
+void MenuScene::Render() const
 {
+
+    gameContext->Draw();
+
     const int white = DxLib::GetColor(255, 255, 255);
-    DxPlus::Text::DrawString(L"2D GameProgramming II",
+    DxPlus::Text::DrawString(L"Menu",
         { DxPlus::CLIENT_WIDTH * 0.5f, DxPlus::CLIENT_HEIGHT * 0.25f },
         white, DxPlus::Text::TextAlign::MIDDLE_CENTER, { 2, 2 }, 0, fontHandle);
 
-
-    switch (game)
+    switch (menu)
     {
-    case TitleScene::start:
+    case MenuScene::start:
     {
         const int yellow1 = DxLib::GetColor(255, 255, 0);
         if (frameCount & 0x20)
         {
-            DxPlus::Text::DrawString(L"GameStart",
+            DxPlus::Text::DrawString(L"GameReStart",
                 { DxPlus::CLIENT_WIDTH * 0.5f, DxPlus::CLIENT_HEIGHT * 0.75f },
                 yellow1, DxPlus::Text::TextAlign::MIDDLE_CENTER, { 2,2 }, 0, fontHandle);
         }
@@ -99,7 +74,7 @@ void TitleScene::Render() const
         break;
     }
 
-    case TitleScene::option:
+    case MenuScene::option:
     {
         const int yellow2 = DxLib::GetColor(255, 255, 0);
         if (frameCount & 0x20)
@@ -117,7 +92,7 @@ void TitleScene::Render() const
         break;
     }
 
-    case TitleScene::end:
+    case MenuScene::end:
     {
         const int yellow3 = DxLib::GetColor(255, 255, 0);
         if (frameCount & 0x20)
