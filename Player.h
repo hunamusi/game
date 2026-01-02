@@ -39,6 +39,8 @@ private:
     int attack = 10;
     int defense = 5;
 
+    int attackTimer = 0;
+
     // ’Ç‰Á: UŒ‚‚É“Á’èƒtƒŒ[ƒ€‚ğ•\¦‚·‚é‚½‚ß‚Ìó‘Ô
     bool isAttacking{ false };
     int attackTicks{ 0 };

@@ -17,8 +17,6 @@ void GameScene::Init()
         gameContext->Reset(); // ‰‰ñ‚Ì‚Ý
         initialized = true;
     }
-
-    //gameContext->Reset();
 }
 
 void GameScene::Update()

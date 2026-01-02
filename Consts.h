@@ -11,6 +11,7 @@ namespace Const
    constexpr DxPlus::Vec2 PLAYER_CENTER_OFFSET = { 0.0f,-48.0f };
    constexpr float PROJECTILE_SPEED = 12.0f;
    constexpr int MAX_ATTRACTIVIENESS = 20;
+   constexpr int MAX_ATTACKTIMER = 2;
                     
    //=====　ショット関連 =====
    constexpr int MAX_PLAYER_WALK_COUNT = 3;

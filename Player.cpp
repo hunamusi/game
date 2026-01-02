@@ -64,8 +64,9 @@ void Player::Update()
     bool isMoving{ false };
     float vx{}, vy{};
 
+    attackTimer++;
 
-    if (PlayerCount >= 0 && shift)
+    if (PlayerCount >= 0 && shift && attackTimer >= Const::MAX_ATTACKTIMER)
     {
         if (left && !right)
         {
@@ -101,9 +102,10 @@ void Player::Update()
             PlayerWalkCount++;
             PlayerWalkCountALL++;
         }
+        attackTimer = 0;
         PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
     }
-    else if (PlayerCount >= 0)
+    else if (PlayerCount >= 0 && attackTimer >= Const::MAX_ATTACKTIMER)
     {
         if (left && !right)
         {
@@ -146,6 +148,7 @@ void Player::Update()
             PlayerWalkCountALL++;
         }
         PlayerWalkCount = std::min(PlayerWalkCount, Const::MAX_PLAYER_WALK_COUNT);
+        attackTimer = 0;
     }
 
     velocity = { vx, vy };
@@ -158,7 +161,7 @@ void Player::Update()
         currentAnim = nextAnim;
         currentAnim->Reset();
     }
-
+    if (currentAnim) currentAnim->Update();
     if (isMoving && currentAnim) currentAnim->Update();
     int buttonDowns = GetButtonDown(PLAYER1);
     bool shoot = (buttonDowns & BUTTON_TRIGGER2) != 0;

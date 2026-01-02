@@ -714,9 +714,9 @@ void GameContext::Draw() const
 
     UI->Draw(DxPlus::Vec2(640, 360));
 
-    SetDrawBlendMode(DX_BLENDMODE_ALPHA, 100);
+    SetDrawBlendMode(DX_BLENDMODE_ALPHA, 220);
 
-    DxPlus::Primitive2D::DrawRect({ 1047,360 }, { 200.0f / Const::MAX_ATTRACTIVIENESS * Attractiveness,24.0f},DxLib::GetColor(255,0,0));
+    DxPlus::Primitive2D::DrawRect({ 1047,360 }, { 200.0f / Const::MAX_ATTRACTIVIENESS * Attractiveness,24.0f},DxLib::GetColor(255,132,163));
 
     SetDrawBlendMode(DX_BLENDMODE_NOBLEND, 0);
 
